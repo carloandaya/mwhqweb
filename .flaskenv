@@ -1,0 +1,2 @@
+FLASK_APP=mywireless
+FLASK_ENV=development

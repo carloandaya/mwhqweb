@@ -1,0 +1,4 @@
+include mywireless/schema.sql
+graft mywireless/static
+graft mywireless/templates
+global-exclude *.pyc
