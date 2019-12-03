@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Sections{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <a class="action" href="{{ url_for('.categories_index') }}">Categories</a>
+{% endblock %}

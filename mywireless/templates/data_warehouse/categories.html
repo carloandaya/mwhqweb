@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Categories{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <ul>
+    {% for category in categories %}
+        <li>
+            <a class="action" href="{{ url_for('.categories_update', id=category['CategoryKey']) }}">
+                {{ category['CategoryName'] }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
+
