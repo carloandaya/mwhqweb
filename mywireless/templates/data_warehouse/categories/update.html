@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Edit "{{ category['CategoryName'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <label for="category_name">Category Name</label>
+        <input name="category_name" id="category_name" value="{{ request.form['category_name'] or category['CategoryName'] }}" required>
+        <input type="submit" value="Save">
+        <!--<input type="button" value="Cancel">-->
+    </form>
+{% endblock %}
+
