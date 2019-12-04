@@ -3,7 +3,7 @@ from werkzeug.exceptions import abort
 
 from mywireless.db import get_db
 
-bp = Blueprint('dw_category', __name__)
+bp = Blueprint('data_warehouse', __name__)
 
 
 def get_category(id):
@@ -33,7 +33,35 @@ def categories_index():
         ' FROM DimCategory'
         ' ORDER BY CategoryName'
     ).fetchall()
-    return render_template('data_warehouse/categories.html', categories=categories)
+    return render_template('data_warehouse/categories/index.html', categories=categories)
+
+
+@bp.route('/data_warehouse/categories/create', methods=('GET', 'POST'))
+def create():
+    if request.method == 'POST':
+        category_name = request.form['category_name']
+        db = get_db()
+        error = None
+
+        if not category_name:
+            error = 'Category Name is required.'
+        elif db.execute(
+            'SELECT CategoryName FROM DimCategory where CategoryName = ?', (category_name,)
+        ).fetchone() is not None:
+            error = 'Category Name {} already exists.'.format(category_name)
+
+        if error is not None:
+            flash(error)
+        else:
+            db.execute(
+                'INSERT INTO DimCategory (CategoryName)'
+                ' VALUES(?)',
+                (category_name,)
+            )
+            db.commit()
+            return redirect(url_for('data_warehouse.categories_index'))
+
+    return render_template('data_warehouse/categories/create.html')
 
 
 @bp.route('/data_warehouse/categories/<int:id>/update', methods=('GET', 'POST'))
@@ -60,5 +88,5 @@ def categories_update(id):
             db.commit()
             return redirect(url_for('data_warehouse.categories_index'))
 
-    return render_template('data_warehouse/update.html', category=category)
+    return render_template('data_warehouse/categories/update.html', category=category)
 
