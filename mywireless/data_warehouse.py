@@ -1,3 +1,4 @@
+from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
 from werkzeug.exceptions import abort
 
@@ -78,15 +79,20 @@ def categories_update(id):
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            db.execute(
-                'UPDATE DimCategory'
-                ' SET CategoryName = ?'
-                ' WHERE CategoryKey = ?',
-                (category_name, id)
-            )
-            db.commit()
-            return redirect(url_for('data_warehouse.categories_index'))
+            try:
+                db = get_db()
+                db.execute(
+                    'UPDATE DimCategory'
+                    ' SET CategoryName = ?'
+                    ' WHERE CategoryKey = ?',
+                    (category_name, id)
+                )
+                db.commit()
+                return redirect(url_for('data_warehouse.categories_index'))
+            except IntegrityError:
+                error = 'Category Name {} already exists.'.format(category_name)
+                flash(error)
+                return render_template('data_warehouse/categories/update.html', category=category)
 
     return render_template('data_warehouse/categories/update.html', category=category)
 
