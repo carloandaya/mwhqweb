@@ -2,19 +2,34 @@ import pytest
 from mywireless.db import get_db
 
 
-def test_categories_index(client):
+def test_index(client):
+    response = client.get('/data_warehouse')
+    assert b'Sections' in response.data
+
+def test_categories_index(client, app):
     response = client.get('/data_warehouse/categories')
     assert b'Phone' in response.data
     assert b'Accessory' in response.data
-
-
-def test_categories_create(client, app):
-    assert client.get('/data_warehouse/categories/create').status_code == 200
 
     with app.app_context():
         db = get_db()
         count = db.execute('SELECT COUNT(CategoryKey) FROM DimCategory').fetchone()[0]
         assert count == 2
+
+
+def test_categories_create(client, app):
+    assert client.get('/data_warehouse/categories/create').status_code == 200
+    client.post('/data_warehouse/categories/create', data={'category_name': 'New Category'})
+
+    with app.app_context():
+        db = get_db()
+        count = db.execute('SELECT COUNT(CategoryKey) FROM DimCategory').fetchone()[0]
+        assert count == 3
+
+
+def test_categories_create_empty(client):
+    response = client.post('/data_warehouse/categories/create', data={'category_name': ''})
+    assert b'Category Name is required.' in response.data
 
 
 def test_categories_update(client, app):
@@ -26,3 +41,13 @@ def test_categories_update(client, app):
         db = get_db()
         category = db.execute('SELECT CategoryName FROM DimCategory WHERE CategoryKey = 1').fetchone()
         assert category[0] == 'updated'
+
+
+def test_categories_update_empty(client):
+    response = client.post('/data_warehouse/categories/1/update', data={'category_name': ''})
+    assert b'Category Name is required.' in response.data
+
+
+def test_categories_update_exception(client):
+    response = client.post('/data_warehouse/categories/1/update', data={'category_name': 'Phone'})
+    assert b'Category Name Phone already exists.' in response.data
