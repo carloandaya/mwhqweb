@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Products{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <ul>
+    {% for product in products %}
+        <li>
+            <a class="action" href="{{ url_for('data_warehouse.products_update', id=product['ProductKey']) }}">
+                {{ category['CategoryName'] }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
+

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Manufacturers{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <ul>
+    {% for manufacturer in manufacturers %}
+        <li>
+            <a class="action" href="{{ url_for('data_warehouse.manufacturers_update', id=manufacturer['ManufacturerKey']) }}">
+                {{ manufacturer['ManufacturerName'] }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
+

@@ -1,2 +1,2 @@
-FLASK_APP=mywireless
+FLASK_APP=mwhqweb.py
 FLASK_ENV=development

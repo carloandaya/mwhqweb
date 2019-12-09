@@ -1,5 +1,4 @@
 import os
-
 from flask import Flask
 
 
@@ -8,7 +7,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE='DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
+        DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
     )
 
     if test_config is None:
@@ -27,8 +26,15 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
+    from . import mywireless
+    app.register_blueprint(mywireless.bp)
+    app.add_url_rule('/', endpoint='index')
+
     from . import data_warehouse
     app.register_blueprint(data_warehouse.bp)
     app.add_url_rule('/data_warehouse', endpoint='index')
 
     return app
+
+
+app = create_app()

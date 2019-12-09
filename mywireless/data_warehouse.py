@@ -21,6 +21,20 @@ def get_category(id):
     return category
 
 
+def get_manufacturer(id):
+    manufacturer = get_db().execute(
+        'SELECT ManufacturerKey, ManufacturerName'
+        ' FROM DimManufacturer'
+        ' WHERE ManufacturerKey = ?',
+        (id,)
+    ).fetchone()
+
+    if manufacturer is None:
+        abort(404, "Manufacturer id {0} doesn't exist.".format(id))
+
+    return manufacturer
+
+
 @bp.route('/data_warehouse')
 def index():
     return render_template('data_warehouse/index.html')
@@ -96,3 +110,45 @@ def categories_update(id):
 
     return render_template('data_warehouse/categories/update.html', category=category)
 
+
+@bp.route('/data_warehouse/manufacturers')
+def manufacturers_index():
+    db = get_db()
+    manufacturers = db.execute(
+        'SELECT ManufacturerKey, ManufacturerName'
+        ' FROM DimManufacturer'
+        ' ORDER BY ManufacturerName'
+    ).fetchall()
+    return render_template('data_warehouse/manufacturers/index.html', manufacturers=manufacturers)
+
+
+@bp.route('/data_warehouse/manufacturers/<int:id>/update', methods=('GET', 'POST'))
+def manufacturers_update(id):
+    manufacturer = get_manufacturer(id)
+
+    if request.method == 'POST':
+        manufacturer_name = request.form['manufacturer_name']
+        error = None
+
+        if not manufacturer_name:
+            error = 'Manufacturer Name is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            try:
+                db = get_db()
+                db.execute(
+                    'UPDATE DimManufacturer'
+                    ' SET ManufacturerName = ?'
+                    ' WHERE ManufacturerKey = ?',
+                    (manufacturer_name, id)
+                )
+                db.commit()
+                return redirect(url_for('data_warehouse.manufacturers_index'))
+            except IntegrityError:
+                error = 'Manufacturer Name {} already exists.'.format(manufacturer_name)
+                flash(error)
+                return render_template('data_warehouse/manufacturers/update.html', manufacturer=manufacturer)
+
+    return render_template('data_warehouse/manufacturers/update.html', manufacturer=manufacturer)
