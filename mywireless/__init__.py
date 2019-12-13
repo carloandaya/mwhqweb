@@ -7,7 +7,8 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
+        DW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
+        RAW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessRawData;Trusted_Connection=yes',
     )
 
     if test_config is None:
@@ -33,6 +34,10 @@ def create_app(test_config=None):
     from . import data_warehouse
     app.register_blueprint(data_warehouse.bp)
     app.add_url_rule('/data_warehouse', endpoint='index')
+
+    from . import shipment_info
+    app.register_blueprint(shipment_info.bp)
+    app.add_url_rule('/shipment_info', endpoint='index')
 
     return app
 

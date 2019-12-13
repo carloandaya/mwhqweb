@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Shipment Information{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <h2>Reports</h2>
+  <p>Useful information.</p>
+  <a class="action" href="{{ url_for('shipment_info.shipped_not_received') }}">Shipped Not Received</a>
+  <a class="action" href="{{ url_for('shipment_info.delivered_not_received') }}">Delivered Not Received</a>
+  <h2>Maintenance</h2>
+  <p>Records that require attention.</p>
+{% endblock %}
