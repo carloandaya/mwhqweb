@@ -16,7 +16,7 @@ def shipped_not_received():
     db = get_db_raw()
     shipments = db.execute(
         'SELECT PONumber, ActualShipDate, ItemNumber, ItemDescription,'
-        ' ExtdPrice, QuantityiShipped, IMEI, TrackingNumber'
+        ' ExtdPrice, QuantityShipped, IMEI, TrackingNumber'
         ' FROM ATT_ShipmentDetailReport'
         ' WHERE IsReceived = 0'
     ).fetchall()
