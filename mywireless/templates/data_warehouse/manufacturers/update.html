@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Edit "{{ manufacturer['ManufacturerName'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <label for="manufacturer_name">Manufacturer Name</label>
+        <input name="manufacturer_name" id="manufacturer_name" value="{{ request.form['manufacturer_name'] or manufacturer['ManufacturerName'] }}" required>
+        <input type="submit" value="Save">
+        <!--<input type="button" value="Cancel">-->
+    </form>
+{% endblock %}
+

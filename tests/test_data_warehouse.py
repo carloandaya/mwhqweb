@@ -69,3 +69,25 @@ def test_manufacturers_index(client, app):
         db = get_db()
         count = db.execute('SELECT COUNT(ManufacturerKey) FROM DimManufacturer').fetchone()[0]
         assert count == 3
+
+
+def test_manufacturers_create(client, app):
+    assert client.get('/data_warehouse/manufacturers/create').status_code == 200
+    client.post('/data_warehouse/manufacturers/create', data={'manufacturer_name': 'New Manufacturer'})
+
+    with app.app_context():
+        db = get_db()
+        count = db.execute('SELECT COUNT(ManufacturerKey) FROM DimManufacturer').fetchone()[0]
+        assert count == 4
+
+
+def test_manufacturers_update(client, app):
+    assert client.get('/data_warehouse/manufacturers/1/update').status_code == 200
+    assert client.get('/data_warehouse/manufacturers/4/update').status_code == 404
+
+    client.post('/data_warehouse/manufacturers/1/update', data={'manufacturer_name': 'updated'})
+    with app.app_context():
+        db = get_db()
+        category = db.execute('SELECT ManufacturerName FROM DimManufacturer WHERE ManufacturerKey = 1').fetchone()
+        assert category[0] == 'updated'
+

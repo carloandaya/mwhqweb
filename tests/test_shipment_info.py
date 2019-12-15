@@ -7,3 +7,9 @@ def test_index(client):
     assert b'Shipment Information' in response.data
     assert b'Shipped Not Received' in response.data
     assert b'Delivered Not Received' in response.data
+
+
+def test_shipped_not_received(client):
+    response = client.get('/shipment_info/shipped_not_received')
+    assert b'Shipped Not Received' in response.data
+

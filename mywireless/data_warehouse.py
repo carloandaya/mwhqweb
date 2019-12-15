@@ -52,7 +52,7 @@ def categories_index():
 
 
 @bp.route('/data_warehouse/categories/create', methods=('GET', 'POST'))
-def create():
+def categories_create():
     if request.method == 'POST':
         category_name = request.form['category_name']
         db = get_db()
@@ -120,6 +120,34 @@ def manufacturers_index():
         ' ORDER BY ManufacturerName'
     ).fetchall()
     return render_template('data_warehouse/manufacturers/index.html', manufacturers=manufacturers)
+
+
+@bp.route('/data_warehouse/manufacturers/create', methods=('GET', 'POST'))
+def manufacturers_create():
+    if request.method == 'POST':
+        manufacturer_name = request.form['manufacturer_name']
+        db = get_db()
+        error = None
+
+        if not manufacturer_name:
+            error = 'Manufacturer Name is required.'
+        elif db.execute(
+            'SELECT ManufacturerName FROM DimManufacturer where ManufacturerName = ?', (manufacturer_name,)
+        ).fetchone() is not None:
+            error = 'Manufacturer Name {} already exists.'.format(manufacturer_name)
+
+        if error is not None:
+            flash(error)
+        else:
+            db.execute(
+                'INSERT INTO DimManufacturer (ManufacturerName)'
+                ' VALUES(?)',
+                (manufacturer_name,)
+            )
+            db.commit()
+            return redirect(url_for('data_warehouse.manufacturers_index'))
+
+    return render_template('data_warehouse/manufacturers/create.html')
 
 
 @bp.route('/data_warehouse/manufacturers/<int:id>/update', methods=('GET', 'POST'))
