@@ -37,6 +37,11 @@ def test_categories_create_empty(client):
     assert b'Category Name is required.' in response.data
 
 
+def test_categories_create_existing(client):
+    response = client.post('/data_warehouse/categories/create', data={'category_name': 'Phone'})
+    assert b'Category Name Phone already exists.' in response.data
+
+
 def test_categories_update(client, app):
     assert client.get('/data_warehouse/categories/1/update').status_code == 200
     assert client.get('/data_warehouse/categories/3/update').status_code == 404
@@ -53,7 +58,7 @@ def test_categories_update_empty(client):
     assert b'Category Name is required.' in response.data
 
 
-def test_categories_update_exception(client):
+def test_categories_update_existing(client):
     response = client.post('/data_warehouse/categories/1/update', data={'category_name': 'Phone'})
     assert b'Category Name Phone already exists.' in response.data
 
@@ -81,6 +86,16 @@ def test_manufacturers_create(client, app):
         assert count == 4
 
 
+def test_manufacturers_create_empty(client):
+    response = client.post('/data_warehouse/manufacturers/create', data={'manufacturer_name': ''})
+    assert b'Manufacturer Name is required.' in response.data
+
+
+def test_manufacturers_create_existing(client):
+    response = client.post('/data_warehouse/manufacturers/create', data={'manufacturer_name': 'Apple'})
+    assert b'Manufacturer Name Apple already exists.' in response.data
+
+
 def test_manufacturers_update(client, app):
     assert client.get('/data_warehouse/manufacturers/1/update').status_code == 200
     assert client.get('/data_warehouse/manufacturers/4/update').status_code == 404
@@ -91,3 +106,12 @@ def test_manufacturers_update(client, app):
         category = db.execute('SELECT ManufacturerName FROM DimManufacturer WHERE ManufacturerKey = 1').fetchone()
         assert category[0] == 'updated'
 
+
+def test_manufacturers_update_empty(client):
+    response = client.post('/data_warehouse/manufacturers/1/update', data={'manufacturer_name': ''})
+    assert b'Manufacturer Name is required.' in response.data
+
+
+def test_manufacturers_update_existing(client):
+    response = client.post('/data_warehouse/manufacturers/2/update', data={'manufacturer_name': 'Apple'})
+    assert b'Manufacturer Name Apple already exists.' in response.data

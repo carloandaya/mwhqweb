@@ -18,7 +18,8 @@ def shipped_not_received():
         'SELECT PONumber, ActualShipDate, ItemNumber, ItemDescription,'
         ' ExtdPrice, QuantityShipped, IMEI, TrackingNumber'
         ' FROM ATT_ShipmentDetailReport'
-        ' WHERE IsReceived = 0'
+        ' WHERE IsReceived = ?',
+        (0)
     ).fetchall()
     return render_template('shipment_info/shipped_not_received.html', shipments=shipments)
 
@@ -28,8 +29,9 @@ def delivered_not_received():
     db = get_db_raw()
     shipments = db.execute(
         'SELECT PONumber, ActualShipDate, ItemNumber, ItemDescription,'
-        ' ExtdPrice, QuantityiShipped, IMEI, TrackingNumber'
+        ' ExtdPrice, QuantityShipped, IMEI, TrackingNumber'
         ' FROM ATT_ShipmentDetailReport'
-        ' WHERE DeliveryStatus = "D" AND IsReceived = 0'
+        ' WHERE DeliveryStatus = ? AND IsReceived = ?',
+        ('D', 0)
     ).fetchall()
     return render_template('shipment_info/delivered_not_received.html', shipments=shipments)
