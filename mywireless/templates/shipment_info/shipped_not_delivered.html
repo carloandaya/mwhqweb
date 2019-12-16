@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Shipped Not Delivered{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <ul>
+    {% for shipment in shipments%}
+        <li>
+                {{ shipment['IMEI'] }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
+
