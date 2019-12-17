@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block header %}
-    <h1>{% block title %}Categories{% endblock %}</h1>
+    <h1>{% block title %}Employees{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
     <ul>
-    {% for category in categories %}
+    {% for employee in employees %}
         <li>
-            <a class="action" href="{{ url_for('data_warehouse.categories_update', id=category['CategoryKey']) }}">
+            <a class="action" href="{{ url_for('.categories_update', id=category['CategoryKey']) }}">
                 {{ category['CategoryName'] }}</a>
         </li>
     {% endfor %}

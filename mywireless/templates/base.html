@@ -1,8 +1,10 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - My Wireless HQ</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+
 <nav>
-  <h1>My Wireless HQ</h1>
+  <a href="{{ url_for('mywireless.index') }}"><h1>My Wireless HQ</h1></a>
 </nav>
 <section class="content">
   <header>
@@ -13,3 +15,5 @@
   {% endfor %}
   {% block content %}{% endblock %}
 </section>
+
+{% block scripts %}{% endblock %}

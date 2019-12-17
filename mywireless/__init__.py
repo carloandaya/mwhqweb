@@ -39,6 +39,10 @@ def create_app(test_config=None):
     app.register_blueprint(shipment_info.bp)
     app.add_url_rule('/shipment_info', endpoint='index')
 
+    from . import human_resources
+    app.register_blueprint(human_resources.bp)
+    app.add_url_rule('/human_resources', endpoint='index')
+
     return app
 
 

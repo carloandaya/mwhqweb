@@ -8,7 +8,7 @@
     <ul>
     {% for category in categories %}
         <li>
-            <a class="action" href="{{ url_for('data_warehouse.categories_update', id=category['CategoryKey']) }}">
+            <a class="action" href="{{ url_for('.categories_update', id=category['CategoryKey']) }}">
                 {{ category['CategoryName'] }}</a>
         </li>
     {% endfor %}
