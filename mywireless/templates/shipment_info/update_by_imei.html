@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Edit "{{ shipment['IMEI'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <label for="imei">IMEI</label>
+        <input name="imei"
+               id="imei"
+               value="{{ request.form['imei'] or shipment['IMEI'] }}" readonly>
+        <label for="delivery_status">Delivery Status</label>
+        <input name="delivery_status"
+               id="delivery_status"
+               value="{{ request.form['delivery_status'] or shipment['DeliveryStatus'] }}" required>
+        <label for="is_received">Received?</label>
+        <input name="is_received"
+               type="checkbox"
+               id="is_received"
+               value="received" {% if shipment['IsReceived'] %}checked{% endif %}>
+        <input type="submit" value="Save">
+    </form>
+{% endblock %}
+

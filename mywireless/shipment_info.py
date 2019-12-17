@@ -1,5 +1,5 @@
 from pyodbc import IntegrityError
-from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
+from flask import (Blueprint, flash, g, redirect, render_template, request, url_for, session)
 from werkzeug.exceptions import abort
 
 from mywireless.db import get_db_raw
@@ -10,7 +10,8 @@ bp = Blueprint('shipment_info', __name__)
 def get_shipment(id):
     shipment = get_db_raw().execute(
         'SELECT IMEI, '
-        'DeliveryStatus '
+        'DeliveryStatus, '
+        'IsReceived '
         'FROM ATT_ShipmentDetailReport '
         'WHERE IMEI = ?',
         id
@@ -67,28 +68,34 @@ def shipped_not_delivered():
 @bp.route('/shipment_info/delivered_not_received')
 def delivered_not_received():
     shipments = get_delivered_not_received()
+    session['shipment_referrer'] = 'shipment_info.delivered_not_received'
     return render_template('shipment_info/delivered_not_received.html', shipments=shipments)
 
 
-@bp.route('/shipment_info/imei/<id>/update')
+@bp.route('/shipment_info/imei/<id>/update', methods=('GET', 'POST'))
 def update_by_imei(id):
     shipment = get_shipment(id)
+    redirect_url = session['shipment_referrer']
 
     if request.method == 'POST':
         delivery_status = request.form['delivery_status']
-        error = None
 
         if not delivery_status:
             delivery_status = None
 
+        if 'is_received' in request.form:
+            is_received = True
+        else:
+            is_received = False
+
         db = get_db_raw()
         db.execute(
             'UPDATE ATT_ShipmentDetailReport'
-            ' SET DeliveryStatus = ?'
+            ' SET DeliveryStatus = ?, IsReceived = ?'
             ' WHERE IMEI = ?',
-            (delivery_status, id)
+            (delivery_status, is_received, id)
         )
         db.commit()
-        return redirect(url_for('shipment_info.index'))
+        return redirect(url_for(redirect_url))
 
     return render_template('shipment_info/update_by_imei.html', shipment=shipment)
