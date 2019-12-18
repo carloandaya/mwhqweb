@@ -5,12 +5,40 @@
 {% endblock %}
 
 {% block content %}
-    <ul>
-    {% for shipment in shipments%}
-        <li>
-                {{ shipment['IMEI'] }}</a>
-        </li>
-    {% endfor %}
-    </ul>
+    <table id="shipment_table">
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Actual Ship Date</th>
+                <th>Item Number</th>
+                <th>Item Description</th>
+                <th>Extd Price</th>
+                <th>Qty</th>
+                <th>IMEI</th>
+                <th>Tracking Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shipment in shipments %}
+                <tr>
+                    <td>{{ shipment['PONumber'] }}</td>
+                    <td>{{ shipment['ActualShipDate'] }}</td>
+                    <td>{{ shipment['ItemNumber'] }}</td>
+                    <td>{{ shipment['ItemDescription'] }}</td>
+                    <td>{{ "${:,.2f}".format(shipment['ExtdPrice']) }}</td>
+                    <td>{{ shipment['QuantityShipped'] }}</td>
+                    <td><a href="{{ url_for('shipment_info.update_by_imei', id=shipment['IMEI']) }}">
+                        {{ shipment['IMEI'] }}</a></td>
+                    <td>{{ shipment['TrackingNumber'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<script src="{{ url_for('static', filename='shipments.js') }}"></script>
 {% endblock %}
 

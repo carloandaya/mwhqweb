@@ -29,7 +29,8 @@
                     <td>{{ shipment['QuantityShipped'] }}</td>
                     <td><a href="{{ url_for('shipment_info.update_by_imei', id=shipment['IMEI']) }}">
                         {{ shipment['IMEI'] }}</a></td>
-                    <td>{{ shipment['TrackingNumber'] }}</td>
+                    <td><a href="{{ url_for('shipment_info.update_by_tracking_number',
+                    id=shipment['TrackingNumber']) }}">{{ shipment['TrackingNumber'] }}</a></td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -23,6 +23,23 @@ def get_shipment(id):
     return shipment
 
 
+def get_shipment_by_tracking_number(id):
+    shipments = get_db_raw().execute(
+        'SELECT IMEI, '
+        'TrackingNumber, '
+        'DeliveryStatus, '
+        'IsReceived '
+        'FROM ATT_ShipmentDetailReport '
+        'WHERE TrackingNumber = ?',
+        id
+    ).fetchall()
+
+    if shipments is None:
+        abort(404, "Shipments with Tracking Number {0} doesn't exist.".format(id))
+
+    return shipments
+
+
 def get_delivered_not_received():
     shipments = get_db_raw().execute(
         'SELECT PONumber, ActualShipDate, ItemNumber, ItemDescription,'
@@ -62,6 +79,7 @@ def shipped_not_delivered():
         ' WHERE DeliveryStatus != ? OR DeliveryStatus IS NULL',
         'D'
     ).fetchall()
+    session['shipment_referrer'] = 'shipment_info.shipped_not_delivered'
     return render_template('shipment_info/shipped_not_delivered.html', shipments=shipments)
 
 
@@ -72,10 +90,41 @@ def delivered_not_received():
     return render_template('shipment_info/delivered_not_received.html', shipments=shipments)
 
 
+@bp.route('/shipment_info/tracking_number/<id>/update', methods=('GET', 'POST'))
+def update_by_tracking_number(id):
+    shipments = get_shipment_by_tracking_number(id)
+
+    if request.method == 'POST':
+        delivery_status = request.form['delivery_status']
+
+        if not delivery_status:
+            delivery_status = None
+
+        if 'is_received' in request.form:
+            is_received = True
+        else:
+            is_received = False
+
+        db = get_db_raw()
+        db.execute(
+            'UPDATE ATT_ShipmentDetailReport'
+            ' SET DeliveryStatus = ?, IsReceived = ?'
+            ' WHERE TrackingNumber = ?',
+            (delivery_status, is_received, id)
+        )
+        db.commit()
+
+        if 'shipment_referrer' in session:
+            return redirect(url_for(session['shipment_referrer']))
+        else:
+            return redirect(url_for('shipment_info.index'))
+
+    return render_template('shipment_info/update_by_tracking_number.html', shipments=shipments)
+
+
 @bp.route('/shipment_info/imei/<id>/update', methods=('GET', 'POST'))
 def update_by_imei(id):
     shipment = get_shipment(id)
-    redirect_url = session['shipment_referrer']
 
     if request.method == 'POST':
         delivery_status = request.form['delivery_status']
@@ -96,6 +145,10 @@ def update_by_imei(id):
             (delivery_status, is_received, id)
         )
         db.commit()
-        return redirect(url_for(redirect_url))
+
+        if 'shipment_referrer' in session:
+            return redirect(url_for(session['shipment_referrer']))
+        else:
+            return redirect(url_for('shipment_info.index'))
 
     return render_template('shipment_info/update_by_imei.html', shipment=shipment)

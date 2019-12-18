@@ -14,7 +14,12 @@ def index():
 
 @bp.route('/human_resources/employees')
 def employees_index():
-    return render_template('human_resources/employees/index.html')
+    employees = get_db().execute(
+        'SELECT EmployeeName, '
+        'EmployeeKey '
+        'FROM DimEmployee'
+    ).fetchall()
+    return render_template('human_resources/employees/index.html', employees=employees)
 
 
 @bp.route('/human_resources/assignments')
