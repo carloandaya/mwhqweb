@@ -4,7 +4,13 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
 
 <nav>
-  <a href="{{ url_for('mywireless.index') }}"><h1>My Wireless HQ</h1></a>
+  <a href="{{ url_for('mw.index') }}"><h1>My Wireless HQ</h1></a>
+  {% if g.user %}
+    <li><span>{{ g.user }}</span></li>
+    <li><a href="{{ url_for('mw.logout') }}">Log Out</a></li>
+  {% else %}
+    <li><a href="{{ url_for('mw.login') }}">Log In</a></li>
+  {% endif %}
 </nav>
 <section class="content">
   <header>

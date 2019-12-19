@@ -19,6 +19,7 @@ def app():
         'DW_DATABASE': 'DRIVER={SQL Server};SERVER=localhost;DATABASE=Test_MyWirelessDW;Trusted_Connection=yes',
         'RAW_DATABASE': 'DRIVER={SQL Server};SERVER=localhost;DATABASE=Test_MyWirelessRawData;Trusted_Connection=yes',
         'WTF_CSRF_ENABLED': False,
+        'LOGIN_DISABLED': True,
     })
 
     with app.app_context():
@@ -36,3 +37,4 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+

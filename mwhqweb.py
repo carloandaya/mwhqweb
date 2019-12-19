@@ -1,1 +1,0 @@
-from mywireless import app

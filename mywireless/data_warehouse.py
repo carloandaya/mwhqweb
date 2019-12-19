@@ -4,7 +4,7 @@ from werkzeug.exceptions import abort
 
 from mywireless.db import get_db
 
-bp = Blueprint('data_warehouse', __name__)
+bp = Blueprint('data_warehouse', __name__, url_prefix='/data_warehouse')
 
 
 def get_category(id):
@@ -35,12 +35,12 @@ def get_manufacturer(id):
     return manufacturer
 
 
-@bp.route('/data_warehouse')
+@bp.route('/')
 def index():
     return render_template('data_warehouse/index.html')
 
 
-@bp.route('/data_warehouse/categories')
+@bp.route('/categories')
 def categories_index():
     db = get_db()
     categories = db.execute(
@@ -51,7 +51,7 @@ def categories_index():
     return render_template('data_warehouse/categories/index.html', categories=categories)
 
 
-@bp.route('/data_warehouse/categories/create', methods=('GET', 'POST'))
+@bp.route('/categories/create', methods=('GET', 'POST'))
 def categories_create():
     if request.method == 'POST':
         category_name = request.form['category_name']
@@ -79,7 +79,7 @@ def categories_create():
     return render_template('data_warehouse/categories/create.html')
 
 
-@bp.route('/data_warehouse/categories/<int:id>/update', methods=('GET', 'POST'))
+@bp.route('/categories/<int:id>/update', methods=('GET', 'POST'))
 def categories_update(id):
     category = get_category(id)
 
@@ -111,7 +111,7 @@ def categories_update(id):
     return render_template('data_warehouse/categories/update.html', category=category)
 
 
-@bp.route('/data_warehouse/manufacturers')
+@bp.route('/manufacturers')
 def manufacturers_index():
     db = get_db()
     manufacturers = db.execute(
@@ -122,7 +122,7 @@ def manufacturers_index():
     return render_template('data_warehouse/manufacturers/index.html', manufacturers=manufacturers)
 
 
-@bp.route('/data_warehouse/manufacturers/create', methods=('GET', 'POST'))
+@bp.route('/manufacturers/create', methods=('GET', 'POST'))
 def manufacturers_create():
     if request.method == 'POST':
         manufacturer_name = request.form['manufacturer_name']
@@ -150,7 +150,7 @@ def manufacturers_create():
     return render_template('data_warehouse/manufacturers/create.html')
 
 
-@bp.route('/data_warehouse/manufacturers/<int:id>/update', methods=('GET', 'POST'))
+@bp.route('/manufacturers/<int:id>/update', methods=('GET', 'POST'))
 def manufacturers_update(id):
     manufacturer = get_manufacturer(id)
 

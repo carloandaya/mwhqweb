@@ -50,6 +50,7 @@ def employees_detail(id):
 
 
 @bp.route('/human_resources/employees/create', methods=('GET', 'POST'))
+# @hr_login_required
 def employees_create():
     db = get_db()
     form = EmployeeForm()

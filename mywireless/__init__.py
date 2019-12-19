@@ -9,6 +9,15 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
         RAW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessRawData;Trusted_Connection=yes',
+        OAUTH_CREDENTIALS={'CLIENT_ID': 'client_id',
+                           'CLIENT_SECRET': 'client_secret'},
+        OAUTH_PARAMETERS={'REDIRECT_URI': 'http://localhost:5000/login/authorized',
+                          'AUTHORITY_URL': 'https://login.microsoftonline.com/common',
+                          'AUTH_ENDPOINT': '/oauth2/v2.0/authorize',
+                          'TOKEN_ENDPOINT': '/oauth2/v2.0/token',
+                          'RESOURCE': 'https://graph.microsoft.com/',
+                          'API_VERSION': 'v1.0',
+                          'SCOPES': ['User.Read', 'Directory.Read.All']}
     )
 
     if test_config is None:
@@ -27,13 +36,13 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from . import mywireless
-    app.register_blueprint(mywireless.bp)
-    app.add_url_rule('/', endpoint='index')
+    with app.app_context():
+        from . import mw
+        app.register_blueprint(mw.bp)
+        app.add_url_rule('/', endpoint='index')
 
     from . import data_warehouse
     app.register_blueprint(data_warehouse.bp)
-    app.add_url_rule('/data_warehouse', endpoint='index')
 
     from . import shipment_info
     app.register_blueprint(shipment_info.bp)
@@ -44,6 +53,3 @@ def create_app(test_config=None):
     app.add_url_rule('/human_resources', endpoint='index')
 
     return app
-
-
-app = create_app()

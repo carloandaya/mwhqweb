@@ -1,6 +1,7 @@
 import pytest
+from flask import g, session
+# import mywireless.mw
 from mywireless.db import get_db
-from mywireless.human_resources import EmployeeForm
 
 
 def test_index(client):
@@ -26,7 +27,10 @@ def test_employee_detail(client):
 
 
 def test_employee_create(client, app):
-    assert client.get('/human_resources/employees/create').status_code == 200
+    response = client.get('/human_resources/employees/create')
+    assert response.status_code == 302
+    assert response.headers['Location'] == 'http://localhost/'
+
     client.post('human_resources/employees/create', data={'name': 'New User', 'initials': 'NU'})
 
     with app.app_context():
@@ -38,3 +42,5 @@ def test_employee_create(client, app):
         assert new_user[0] == 200000
         assert new_user[1] == 'New User'
         assert new_user[2] == 'nu200000@mywirelessgroup.com'
+
+
