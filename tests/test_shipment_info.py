@@ -49,3 +49,44 @@ def test_delivered_not_received(client, app):
                            ' FROM ATT_ShipmentDetailReport'
                            ' WHERE IsReceived = ? AND DeliveryStatus = ?', (0, 'D')).fetchone()[0]
         assert count == 2
+
+
+def test_update_by_imei(client, app):
+    assert client.get('/shipment_info/imei/358711099663452/update').status_code == 200
+    assert client.get('/shipment_info/imei/1/update').status_code == 404
+
+    client.post('/shipment_info/imei/358711099663452/update', data={'delivery_status': 'D', 'is_received': 'received'})
+    with app.app_context():
+        db = get_db_raw()
+        shipment = db.execute('SELECT DeliveryStatus, IsReceived'
+                              ' FROM ATT_ShipmentDetailReport'
+                              ' WHERE IMEI = ?', '358711099663452').fetchone()
+        assert shipment[0] == 'D'
+        assert shipment[1]
+
+    client.post('/shipment_info/imei/358711099663452/update', data={'delivery_status': '', 'is_received': 'received'})
+    with app.app_context():
+        db = get_db_raw()
+        shipment = db.execute('SELECT DeliveryStatus, IsReceived'
+                              ' FROM ATT_ShipmentDetailReport'
+                              ' WHERE IMEI = ?', '358711099663452').fetchone()
+        assert not shipment[0]
+        assert shipment[1]
+
+    client.post('/shipment_info/imei/358711099663452/update', data={'delivery_status': ''})
+    with app.app_context():
+        db = get_db_raw()
+        shipment = db.execute('SELECT DeliveryStatus, IsReceived'
+                              ' FROM ATT_ShipmentDetailReport'
+                              ' WHERE IMEI = ?', '358711099663452').fetchone()
+        assert not shipment[0]
+        assert not shipment[1]
+
+    client.post('/shipment_info/imei/358711099663452/update', data={'delivery_status': 'D'})
+    with app.app_context():
+        db = get_db_raw()
+        shipment = db.execute('SELECT DeliveryStatus, IsReceived'
+                              ' FROM ATT_ShipmentDetailReport'
+                              ' WHERE IMEI = ?', '358711099663452').fetchone()
+        assert shipment[0] == 'D'
+        assert not shipment[1]

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Employee Detail{% endblock %}</h1>
+<p><a href="{{ url_for('human_resources.employees_index') }}">Employees</a> | Edit</p>
+{% endblock %}
+
+{% block content %}
+    <table>
+        <tr>
+            <td class="hr">Employee Key: </td>
+            <td class="hr">{{ employee['EmployeeKey'] }}</td>
+        </tr>
+        <tr>
+            <td class="hr">Employee Name: </td>
+            <td class="hr">{{ employee['EmployeeName'] }}</td>
+        </tr>
+        <tr>
+            <td class="hr">Email: </td>
+            <td class="hr">{{ employee['Email'] }}</td>
+        </tr>
+    </table>
+
+{% endblock %}
+

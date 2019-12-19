@@ -1,8 +1,20 @@
 from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
 from werkzeug.exceptions import abort
+from flask_wtf import FlaskForm
+from wtforms import StringField
+from wtforms.validators import DataRequired, Length
 
 from mywireless.db import get_db
+
+
+class EmployeeForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    initials = StringField('Initials', validators=[DataRequired(),
+                                                   Length(min=2,
+                                                          max=2,
+                                                          message='Field must be exactly 2 characters long.')])
+
 
 bp = Blueprint('human_resources', __name__)
 
@@ -16,10 +28,52 @@ def index():
 def employees_index():
     employees = get_db().execute(
         'SELECT EmployeeName, '
-        'EmployeeKey '
+        'EmployeeKey, '
+        'Email '
         'FROM DimEmployee'
     ).fetchall()
     return render_template('human_resources/employees/index.html', employees=employees)
+
+
+@bp.route('/human_resources/<int:id>/employee')
+def employee_detail(id):
+    employee = get_db().execute(
+        'SELECT EmployeeKey, '
+        'EmployeeName, '
+        'ATTUID, '
+        'Email '
+        'FROM DimEmployee '
+        'WHERE EmployeeKey = ?',
+        id
+    ).fetchone()
+    return render_template('human_resources/employees/employee.html', employee=employee)
+
+
+@bp.route('/human_resources/employees/create', methods=('GET', 'POST'))
+def employees_create():
+    db = get_db()
+    form = EmployeeForm()
+    if form.validate_on_submit():
+        new_employee = db.execute(
+            'INSERT INTO DimEmployee (EmployeeName)'
+            ' OUTPUT INSERTED.EmployeeKey, INSERTED.EmployeeName'
+            ' VALUES (?)',
+            form.name.data
+        ).fetchone()
+        db.commit()
+        employee = {'EmployeeKey': new_employee[0], 'EmployeeName': new_employee[1]}
+        email_address = db.execute(
+            'UPDATE DimEmployee '
+            'SET Email = ? '            
+            'OUTPUT INSERTED.Email '
+            'WHERE EmployeeKey = ? ',
+            (str(form.initials.data).lower() + str(employee['EmployeeKey']) + '@mywirelessgroup.com'
+             , employee['EmployeeKey'])
+        ).fetchone()[0]
+        db.commit()
+        employee['Email'] = email_address
+        return redirect(url_for('human_resources.employee_detail', id=employee['EmployeeKey']))
+    return render_template('human_resources/employees/create.html', form=form)
 
 
 @bp.route('/human_resources/assignments')

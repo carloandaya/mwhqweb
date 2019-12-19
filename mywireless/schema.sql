@@ -36,6 +36,7 @@ CREATE TABLE [dbo].[DimEmployee](
 	[EmployeeKey] [int] IDENTITY(200000,1) NOT NULL,
 	[EmployeeName] [nvarchar](50) NOT NULL,
 	[ATTUID] [nvarchar](10) NULL,
+	[Email] [nvarchar](50) NULL,
 PRIMARY KEY CLUSTERED
 (
 	[EmployeeKey] ASC

@@ -2,13 +2,34 @@
 
 {% block header %}
     <h1>{% block title %}Employees{% endblock %}</h1>
+    <p><a href="{{ url_for('human_resources.index') }}">Human Resources</a>
+        | <a href="{{ url_for('human_resources.employees_create') }}">Create Employee</a></p>
 {% endblock %}
 
 {% block content %}
-    <ul>
-    {% for employee in employees %}
-        <li>{{ employee['EmployeeName'] }}</li>
-    {% endfor %}
-    </ul>
+    <table id="default_table">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+                <tr>
+                    <td>{{ employee['EmployeeKey'] }}</td>
+                    <td><a href="{{ url_for('human_resources.employee_detail', id=employee['EmployeeKey']) }}">
+                        {{ employee['EmployeeName'] }}</a></td>
+                    <td>{{ employee['Email'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
 
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<script src="{{ url_for('static', filename='mywireless.js') }}"></script>
+{% endblock %}

@@ -18,6 +18,7 @@ def app():
         'TESTING': True,
         'DW_DATABASE': 'DRIVER={SQL Server};SERVER=localhost;DATABASE=Test_MyWirelessDW;Trusted_Connection=yes',
         'RAW_DATABASE': 'DRIVER={SQL Server};SERVER=localhost;DATABASE=Test_MyWirelessRawData;Trusted_Connection=yes',
+        'WTF_CSRF_ENABLED': False,
     })
 
     with app.app_context():
