@@ -36,7 +36,7 @@ def employees_index():
 
 
 @bp.route('/human_resources/<int:id>/employee')
-def employee_detail(id):
+def employees_detail(id):
     employee = get_db().execute(
         'SELECT EmployeeKey, '
         'EmployeeName, '
@@ -72,7 +72,7 @@ def employees_create():
         ).fetchone()[0]
         db.commit()
         employee['Email'] = email_address
-        return redirect(url_for('human_resources.employee_detail', id=employee['EmployeeKey']))
+        return redirect(url_for('human_resources.employees_detail', id=employee['EmployeeKey']))
     return render_template('human_resources/employees/create.html', form=form)
 
 
