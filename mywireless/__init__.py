@@ -50,6 +50,5 @@ def create_app(test_config=None):
 
     from . import human_resources
     app.register_blueprint(human_resources.bp)
-    app.add_url_rule('/human_resources', endpoint='index')
 
     return app

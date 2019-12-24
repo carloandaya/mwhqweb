@@ -5,7 +5,7 @@ from mywireless.db import get_db
 
 
 def test_index(client):
-    response = client.get('/human_resources')
+    response = client.get('/human_resources/')
     assert b'Human Resources' in response.data
     assert b'Administration' in response.data
     assert b'Employees' in response.data
