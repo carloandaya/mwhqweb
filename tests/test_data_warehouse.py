@@ -2,13 +2,13 @@ import pytest
 from mywireless.db import get_db
 
 
-def test_index(client):
-    response = client.get('/data_warehouse/')
-    assert b'Data Warehouse' in response.data
-    assert b'Administration' in response.data
-    assert b'Categories' in response.data
-    assert b'Manufacturers' in response.data
-    assert b'Maintenance' in response.data
+# def test_index(client):
+# #     response = client.get('/data_warehouse/')
+# #     assert b'Data Warehouse' in response.data
+# #     assert b'Administration' in response.data
+# #     assert b'Categories' in response.data
+# #     assert b'Manufacturers' in response.data
+# #     assert b'Maintenance' in response.data
 
 
 def test_categories_index(client, app):

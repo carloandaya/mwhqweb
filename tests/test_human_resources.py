@@ -28,8 +28,7 @@ def test_employee_detail(client):
 
 def test_employee_create(client, app):
     response = client.get('/human_resources/employees/create')
-    assert response.status_code == 302
-    assert response.headers['Location'] == 'http://localhost/'
+    assert response.status_code == 200
 
     client.post('human_resources/employees/create', data={'name': 'New User', 'initials': 'NU'})
 

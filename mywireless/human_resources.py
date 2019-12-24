@@ -4,6 +4,7 @@ from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired, Length
+from mywireless.mw import hr_login_required
 
 from mywireless.db import get_db
 
@@ -50,7 +51,7 @@ def employees_detail(id):
 
 
 @bp.route('/human_resources/employees/create', methods=('GET', 'POST'))
-# @hr_login_required
+@hr_login_required
 def employees_create():
     db = get_db()
     form = EmployeeForm()

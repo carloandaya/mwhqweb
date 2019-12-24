@@ -3,31 +3,30 @@ import uuid
 from flask import Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
 from flask_oauthlib.client import OAuth
 from werkzeug.exceptions import abort
-from mywireless import auth
-from mywireless.auth import OAuthSignIn
-
 
 bp = Blueprint('mw', __name__)
-oauth = OAuthSignIn()
+
+credentials = current_app.config['OAUTH_CREDENTIALS']
+parameters = current_app.config['OAUTH_PARAMETERS']
 
 OAUTH = OAuth(current_app)
 MSGRAPH = OAUTH.remote_app(
     'mwhqweb',
-    consumer_key=oauth.credentials['CLIENT_ID'],
-    consumer_secret=oauth.credentials['CLIENT_SECRET'],
-    request_token_params={'scope': oauth.parameters['SCOPES']},
-    base_url=oauth.parameters['RESOURCE'] + oauth.parameters['API_VERSION'] + '/',
+    consumer_key=credentials['CLIENT_ID'],
+    consumer_secret=credentials['CLIENT_SECRET'],
+    request_token_params={'scope': parameters['SCOPES']},
+    base_url=parameters['RESOURCE'] + parameters['API_VERSION'] + '/',
     request_token_url=None,
     access_token_method='POST',
-    access_token_url=oauth.parameters['AUTHORITY_URL'] + oauth.parameters['TOKEN_ENDPOINT'],
-    authorize_url=oauth.parameters['AUTHORITY_URL'] + oauth.parameters['AUTH_ENDPOINT']
+    access_token_url=parameters['AUTHORITY_URL'] + parameters['TOKEN_ENDPOINT'],
+    authorize_url=parameters['AUTHORITY_URL'] + parameters['AUTH_ENDPOINT']
 )
 
 
 @MSGRAPH.tokengetter
 def get_token():
     """Called by flask_oauthlib.client to retrieve current access token."""
-    return session.get('microsoft_token')
+    return session.get('microsoft_token'), ''
 
 
 @bp.route('/')
@@ -37,9 +36,6 @@ def index():
 
 @bp.route('/login')
 def login():
-    if 'microsoft_token' in session:
-        return redirect(url_for('mw.index'))
-    parameters = oauth.parameters
     session['state'] = str(uuid.uuid4())
     return MSGRAPH.authorize(callback=parameters['REDIRECT_URI'], state=session['state'])
 
@@ -47,17 +43,8 @@ def login():
 @bp.route('/login/authorized')
 def authorized():
     if str(session['state']) != str(request.args['state']):
-        print('Session State: {}'.format(str(session['state'])))
-        print('Request State: {}'.format(str(request.args['state'])))
         raise Exception('state returned to redirect URL does not match!')
-
     response = MSGRAPH.authorized_response()
-
-    if response is None:
-        return 'Access Denied: Reason={}, Error={}'.format(response.get('error'), response.get('error_description'))
-
-    print('Response: ' + str(response))
-
     session['microsoft_token'] = response['access_token']
     headers = {'SdkVersion': 'mwhqweb',
                'x-client-SKU': 'mwhqweb',
@@ -82,8 +69,9 @@ def load_logged_in_user():
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for('mw.index'))
+        if not current_app.config['TESTING']:
+            if g.user is None:
+                return redirect(url_for('mw.index'))
 
         return view(**kwargs)
 
@@ -93,8 +81,9 @@ def login_required(view):
 def hr_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None or 'ab95afb9-e27c-41f4-9737-36cf1fed467e' not in session.get('user_groups'):
-            return redirect(url_for('mw.index'))
+        if not current_app.config['TESTING']:
+            if g.user is None or 'ab95afb9-e27c-41f4-9737-36cf1fed467e' not in session.get('user_groups'):
+                return redirect(url_for('mw.index'))
 
         return view(**kwargs)
 
