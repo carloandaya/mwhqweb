@@ -78,6 +78,18 @@ def login_required(view):
     return wrapped_view
 
 
+def po_login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if not current_app.config['TESTING']:
+            if g.user is None or '3894db7e-e310-47e3-b3db-dcdb4a188f4d' not in session.get('user_groups'):
+                return redirect(url_for('mw.index'))
+
+        return view(**kwargs)
+
+    return wrapped_view
+
+
 def hr_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):

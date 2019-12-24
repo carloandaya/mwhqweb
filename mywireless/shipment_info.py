@@ -1,5 +1,6 @@
 from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for, session)
+from mywireless.mw import po_login_required
 from werkzeug.exceptions import abort
 
 from mywireless.db import get_db_raw
@@ -91,6 +92,7 @@ def delivered_not_received():
 
 
 @bp.route('/shipment_info/tracking_number/<id>/update', methods=('GET', 'POST'))
+@po_login_required
 def update_by_tracking_number(id):
     shipments = get_shipment_by_tracking_number(id)
 
@@ -123,6 +125,7 @@ def update_by_tracking_number(id):
 
 
 @bp.route('/shipment_info/imei/<id>/update', methods=('GET', 'POST'))
+@po_login_required
 def update_by_imei(id):
     shipment = get_shipment(id)
 
