@@ -9,7 +9,7 @@ from mywireless.mw import hr_login_required
 from mywireless.db import get_db
 
 
-class EmployeeForm(FlaskForm):
+class EmployeeCreateForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     initials = StringField('Initials', validators=[DataRequired(),
                                                    Length(min=2,
@@ -17,7 +17,26 @@ class EmployeeForm(FlaskForm):
                                                           message='Field must be exactly 2 characters long.')])
 
 
+class EmployeeUpdateForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    att_uid = StringField('ATTUID')
+
+
 bp = Blueprint('human_resources', __name__, url_prefix='/human_resources')
+
+
+def get_employee(id):
+    employee = get_db().execute(
+        'SELECT EmployeeKey, EmployeeName, ATTUID, Email'
+        ' FROM DimEmployee'
+        ' WHERE EmployeeKey = ?',
+        (id,)
+    ).fetchone()
+
+    if employee is None:
+        abort(404, "Employee id {0} doesn't exist.".format(id))
+
+    return employee
 
 
 @bp.route('/')
@@ -36,17 +55,9 @@ def employees_index():
     return render_template('human_resources/employees/index.html', employees=employees)
 
 
-@bp.route('/<int:id>/employee')
+@bp.route('/employees/<int:id>')
 def employees_detail(id):
-    employee = get_db().execute(
-        'SELECT EmployeeKey, '
-        'EmployeeName, '
-        'ATTUID, '
-        'Email '
-        'FROM DimEmployee '
-        'WHERE EmployeeKey = ?',
-        id
-    ).fetchone()
+    employee = get_employee(id)
     return render_template('human_resources/employees/employee.html', employee=employee)
 
 
@@ -54,7 +65,7 @@ def employees_detail(id):
 @hr_login_required
 def employees_create():
     db = get_db()
-    form = EmployeeForm()
+    form = EmployeeCreateForm()
     if form.validate_on_submit():
         new_employee = db.execute(
             'INSERT INTO DimEmployee (EmployeeName)'
@@ -76,6 +87,45 @@ def employees_create():
         employee['Email'] = email_address
         return redirect(url_for('human_resources.employees_detail', id=employee['EmployeeKey']))
     return render_template('human_resources/employees/create.html', form=form)
+
+
+@bp.route('/employees/<int:id>/update', methods=('GET', 'POST'))
+@hr_login_required
+def employees_update(id):
+    employee = get_employee(id)
+    form = EmployeeUpdateForm()
+    form.name.data = employee[1]
+    form.att_uid.data = employee[2]
+
+    if form.validate_on_submit():
+        employee_name = request.form['name']
+        employee_attuid = request.form['att_uid']
+        print(employee_name)
+        print(employee_attuid)
+        error = None
+
+        if not employee_name:
+            error = 'Employee Name is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            try:
+                db = get_db()
+                db.execute(
+                    'UPDATE DimEmployee'
+                    ' SET EmployeeName = ?, ATTUID = ?'
+                    ' WHERE EmployeeKey = ?',
+                    (employee_name, employee_attuid, id)
+                )
+                db.commit()
+                return redirect(url_for('human_resources.employees_index'))
+            except IntegrityError:
+                error = 'ATTUID {} already exists.'.format(employee_attuid)
+                flash(error)
+                return render_template('human_resources/employees/update.html', form=form)
+
+    return render_template('human_resources/employees/update.html', form=form)
 
 
 @bp.route('/assignments')

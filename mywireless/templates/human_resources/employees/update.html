@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Update Employee{% endblock %}</h1>
+    <p>
+        <a href="{{ url_for('human_resources.employees_index') }}">Employees</a>
+    </p>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.name.label }} {{ form.name(size=50) }}
+        {% for error in form.name.errors %}
+        [{{ error }}]
+        {% endfor %}
+        {{ form.att_uid.label }} {{ form.att_uid(max=8) }}
+        {% for error in form.att_uid.errors %}
+        [{{ error }}]
+        {% endfor %}
+        <input type="submit" value="Save">
+    </form>
+{% endblock %}
+
