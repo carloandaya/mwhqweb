@@ -17,7 +17,7 @@ def create_app(test_config=None):
                           'TOKEN_ENDPOINT': '/oauth2/v2.0/token',
                           'RESOURCE': 'https://graph.microsoft.com/',
                           'API_VERSION': 'v1.0',
-                          'SCOPES': ['User.Read', 'Directory.Read.All']}
+                          'SCOPES': ['User.Read', 'Directory.ReadWrite.All']}
     )
 
     if test_config is None:
