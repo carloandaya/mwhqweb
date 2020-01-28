@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Locations{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <table id="default_table">
+        <thead>
+            <tr>
+                <th>Store Key</th>
+                <th>Store Name</th>
+                <th>Region Key</th>
+                <th>Dealer Code</th>
+                <th>RQ Abbreviation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for location in locations %}
+                <tr>
+                    <td>{{ location['StoreKey'] }}</td>
+                    <td>{{ location['StoreName'] }}</td>
+                    <td>{{ location['RegionName'] }}</td>
+                    <td>{{ location['DealerCode'] }}</td>
+                    <td>{{ location['RQAbbreviation'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<script src="{{ url_for('static', filename='mywireless.js') }}"></script>
+{% endblock %}
+

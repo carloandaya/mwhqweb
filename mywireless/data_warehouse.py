@@ -1,6 +1,10 @@
 from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
 from werkzeug.exceptions import abort
+from flask_wtf import FlaskForm
+from wtforms import StringField, RadioField, BooleanField, HiddenField, SelectField
+from wtforms.validators import DataRequired, Length
+
 
 from mywireless.db import get_db
 
@@ -109,6 +113,69 @@ def categories_update(id):
                 return render_template('data_warehouse/categories/update.html', category=category)
 
     return render_template('data_warehouse/categories/update.html', category=category)
+
+
+class LocationForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    dealer_code = StringField('Dealer Code')
+    rq_abbreviation = StringField('RQ Abbreviation')
+    is_active = BooleanField('Is Active')
+    region = SelectField('Region', coerce=int)
+
+
+@bp.route('/locations')
+def locations_index():
+    db = get_db()
+    locations = db.execute(
+        'SELECT s.StoreKey, s.StoreName, r.RegionName, s.DealerCode, s.RQAbbreviation'
+        ' FROM DimStore s JOIN DimRegion r'
+        ' ON s.RegionKey = r.RegionKey'
+        ' WHERE s.IsActive = 1'
+        ' ORDER BY s.StoreName'
+    ).fetchall()
+    return render_template('data_warehouse/locations/index.html', locations=locations)
+
+
+@bp.route('/locations/create', methods=('GET', 'POST'))
+def locations_create():
+    db = get_db()
+    regions = db.execute(
+        'SELECT RegionKey, RegionName'
+        ' FROM DimRegion'
+    ).fetchall()
+    regions_select = [(r.RegionKey, r.RegionName) for r in regions]
+    form = LocationForm()
+    form.region.choices = regions_select
+
+    if form.validate_on_submit():
+        db.execute(
+            'INSERT INTO DimStore (StoreName, RegionKey, DealerCode, RQAbbreviation, IsActive)'
+            ' VALUES(?, ?, ?, ?, ?)',
+            (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data, form.is_active.data)
+        )
+        db.commit()
+        return redirect(url_for('data_warehouse.locations_index'))
+
+    return render_template('data_warehouse/locations/create.html', form=form)
+
+
+@bp.route('/locations/<int:id>/update', methods=('GET', 'POST'))
+def locations_update(id):
+    form = LocationForm()
+    db = get_db()
+    location = db.execute(
+        'SELECT s.StoreKey, s.StoreName, r.RegionName, s.DealerCode, s.RQAbbreviation, s.IsActive'
+        ' FROM DimStore s JOIN DimRegion r'
+        ' ON s.RegionKey = r.RegionKey'
+        ' WHERE s.StoreKey = ?', id
+    ).fetchone()
+
+    form.name.data = location.StoreName
+    form.dealer_code.data = location.DealerCode
+    form.rq_abbreviation.data = location.RQAbbreviation
+    form.is_active.data = location.IsActive
+
+    return render_template('data_warehouse/locations/update.html', form=form)
 
 
 @bp.route('/manufacturers')
