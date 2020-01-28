@@ -146,6 +146,7 @@ def locations_create():
     regions_select = [(r.RegionKey, r.RegionName) for r in regions]
     form = LocationForm()
     form.region.choices = regions_select
+    form.is_active.data = True
 
     if form.validate_on_submit():
         db.execute(
