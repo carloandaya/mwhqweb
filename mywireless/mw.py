@@ -54,7 +54,7 @@ def authorized():
     group_membership = MSGRAPH.get('me/memberOf', headers=headers).data
     session['user_id'] = user_data['displayName']
     session['user_groups'] = [group['id'] for group in group_membership['value']]
-    return redirect(url_for('human_resources.index'))
+    return redirect(url_for('mw.index'))
 
 
 @bp.before_app_request

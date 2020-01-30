@@ -54,12 +54,12 @@ def get_delivered_not_received():
     return shipments
 
 
-@bp.route('/shipment_info')
+@bp.route('/shipment-info')
 def index():
     return render_template('shipment_info/index.html')
 
 
-@bp.route('/shipment_info/shipped_not_received')
+@bp.route('/shipment-info/shipped-not-received')
 def shipped_not_received():
     db = get_db_raw()
     shipments = db.execute(
@@ -72,7 +72,7 @@ def shipped_not_received():
     return render_template('shipment_info/shipped_not_received.html', shipments=shipments)
 
 
-@bp.route('/shipment_info/shipped_not_delivered')
+@bp.route('/shipment-info/shipped-not-delivered')
 def shipped_not_delivered():
     db = get_db_raw()
     shipments = db.execute(
@@ -86,14 +86,14 @@ def shipped_not_delivered():
     return render_template('shipment_info/shipped_not_delivered.html', shipments=shipments)
 
 
-@bp.route('/shipment_info/delivered_not_received')
+@bp.route('/shipment-info/delivered-not-received')
 def delivered_not_received():
     shipments = get_delivered_not_received()
     session['shipment_referrer'] = 'shipment_info.delivered_not_received'
     return render_template('shipment_info/delivered_not_received.html', shipments=shipments)
 
 
-@bp.route('/shipment_info/tracking_number/<id>/update', methods=('GET', 'POST'))
+@bp.route('/shipment-info/tracking-number/<id>/update', methods=('GET', 'POST'))
 @po_login_required
 def update_by_tracking_number(id):
     shipments = get_shipment_by_tracking_number(id)
@@ -126,7 +126,7 @@ def update_by_tracking_number(id):
     return render_template('shipment_info/update_by_tracking_number.html', shipments=shipments)
 
 
-@bp.route('/shipment_info/imei/<id>/update', methods=('GET', 'POST'))
+@bp.route('/shipment-info/imei/<id>/update', methods=('GET', 'POST'))
 @po_login_required
 def update_by_imei(id):
     shipment = get_shipment(id)
@@ -163,7 +163,7 @@ class CorrectionSubmission(FlaskForm):
     items = TextAreaField('Items')
 
 
-@bp.route('/shipment_info/corrections/delivered-not-received', methods=('GET', 'POST'))
+@bp.route('/shipment-info/corrections/delivered-not-received', methods=('GET', 'POST'))
 @po_login_required
 def corrections_delivered_not_received():
     form = CorrectionSubmission()

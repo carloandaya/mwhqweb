@@ -12,4 +12,8 @@
   <a class="action" href="{{ url_for('shipment_info.shipped_not_delivered') }}">Shipped Not Delivered</a><br>
   <h2>Maintenance</h2>
   <p>Records that require attention.</p>
+  <h2>Adjustments</h2>
+  <a class="action" href="{{ url_for('shipment_info.corrections_delivered_not_received') }}">
+    Delivered Not Received Corrections
+  </a>
 {% endblock %}
