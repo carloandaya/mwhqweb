@@ -164,6 +164,7 @@ class CorrectionSubmission(FlaskForm):
 
 
 @bp.route('/shipment_info/corrections/delivered-not-received', methods=('GET', 'POST'))
+@po_login_required
 def corrections_delivered_not_received():
     form = CorrectionSubmission()
 
