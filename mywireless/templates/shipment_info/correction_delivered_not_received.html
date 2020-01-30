@@ -5,6 +5,11 @@
 {% endblock %}
 
 {% block content %}
+    <p>Items may show up in the Delivered Not Received report even when the item has already been received because
+    of discrepancies in PO numbers. After confirming that devices have been received, enter their IMEIs in the textbox
+    below, <em>one line per device</em>, and submit. Corrections will be reflected in Power BI
+    next business day.</p>
+
     <form method="post">
         {{ form.csrf_token }}
         {{ form.items.label }} {{ form.items }}
