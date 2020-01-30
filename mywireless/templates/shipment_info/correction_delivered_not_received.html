@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Corrections - Delivered Not Received{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.items.label }} {{ form.items }}
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}
+
+

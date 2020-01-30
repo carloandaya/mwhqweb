@@ -42,3 +42,35 @@ PRIMARY KEY CLUSTERED
 	[EmployeeKey] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY];
+
+DROP TABLE IF EXISTS DimStore;
+DROP TABLE IF EXISTS DimRegion;
+
+CREATE TABLE [dbo].[DimRegion](
+	[RegionKey] [int] IDENTITY(1,1) NOT NULL,
+	[RegionName] [nvarchar](50) NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[RegionKey] ASC
+)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY];
+
+CREATE TABLE [dbo].[DimStore](
+	[StoreKey] [int] IDENTITY(1,1) NOT NULL,
+	[StoreName] [nvarchar](50) NOT NULL,
+	[RegionKey] [int] NOT NULL,
+	[DealerCode] [nvarchar](10) NULL,
+	[RQAbbreviation] [nvarchar](10) NULL,
+	[IsActive] [bit] NULL,
+PRIMARY KEY CLUSTERED
+(
+	[StoreKey] ASC
+)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY];
+
+ALTER TABLE [dbo].[DimStore] ADD  DEFAULT ((0)) FOR [IsActive];
+
+ALTER TABLE [dbo].[DimStore]  WITH CHECK ADD  CONSTRAINT [FK_DimStore_DimRegion] FOREIGN KEY([RegionKey])
+REFERENCES [dbo].[DimRegion] ([RegionKey]);
+
+ALTER TABLE [dbo].[DimStore] CHECK CONSTRAINT [FK_DimStore_DimRegion];

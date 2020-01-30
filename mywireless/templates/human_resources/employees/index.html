@@ -21,7 +21,8 @@
                     <td>{{ employee['EmployeeKey'] }}</td>
                     <td><a href="{{ url_for('human_resources.employees_detail', id=employee['EmployeeKey']) }}">
                         {{ employee['EmployeeName'] }}</a></td>
-                    <td>{{ employee['Email'] }}</td>
+                    <td><a href="mailto:{{ employee['Email'] }}">
+                        {{ employee['Email'] }}</a></td>
                 </tr>
             {% endfor %}
         </tbody>

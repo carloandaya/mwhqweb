@@ -2,13 +2,13 @@ import pytest
 from mywireless.db import get_db
 
 
-# def test_index(client):
-# #     response = client.get('/data_warehouse/')
-# #     assert b'Data Warehouse' in response.data
-# #     assert b'Administration' in response.data
-# #     assert b'Categories' in response.data
-# #     assert b'Manufacturers' in response.data
-# #     assert b'Maintenance' in response.data
+def test_index(client):
+    response = client.get('/data_warehouse/')
+    assert b'Data Warehouse' in response.data
+    assert b'Administration' in response.data
+    assert b'Categories' in response.data
+    assert b'Manufacturers' in response.data
+    assert b'Maintenance' in response.data
 
 
 def test_categories_index(client, app):
@@ -61,6 +61,24 @@ def test_categories_update_empty(client):
 def test_categories_update_existing(client):
     response = client.post('/data_warehouse/categories/1/update', data={'category_name': 'Phone'})
     assert b'Category Name Phone already exists.' in response.data
+
+
+def test_locations_index(client, app):
+    response = client.get('/data_warehouse/locations')
+    assert b'Locations' in response.data
+    assert b'Azusa' in response.data
+    assert b'CAGLA Market' in response.data
+
+
+def test_locations_create(client, app):
+    assert client.get('/data_warehouse/locations/create').status_code == 200
+    client.post('/data_warehouse/locations/create', data={'name': 'Test', 'region': 2, 'dealer_code': 'Test',
+                                                          'rq_abbreviation': 'Test', 'is_active': 'y'})
+
+    with app.app_context():
+        db = get_db()
+        count = db.execute('SELECT COUNT(StoreKey) FROM DimStore').fetchone()[0]
+        assert count == 2
 
 
 def test_manufacturers_index(client, app):

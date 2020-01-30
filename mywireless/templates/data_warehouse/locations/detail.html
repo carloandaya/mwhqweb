@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Location Detail{% endblock %}</h1>
+    <p>
+        <a href="{{ url_for('data_warehouse.locations_index') }}">Locations</a> |
+        <a href="{{ url_for('data_warehouse.locations_update', id=location['StoreKey']) }}">Edit</a>
+    </p>
+{% endblock %}
+
+{% block content %}
+    <table>
+        <tr>
+            <td class="hr">Location Name: </td>
+            <td class="hr">{{ location['StoreName'] }}</td>
+        </tr>
+        <tr>
+            <td class="hr">Region: </td>
+            <td class="hr">{{ location['RegionName'] }}</td>
+        </tr>
+        <tr>
+            <td class="hr">Dealer Code: </td>
+            <td class="hr">{{ location['DealerCode'] }}</td>
+        </tr>
+        <tr>
+            <td class="hr">RQ Abbreviation: </td>
+            <td class="hr">{{ location['RQAbbreviation'] }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>District Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in district %}
+            <tr>
+                <td>{{ d['DistrictName'] }}</td>
+                <td>{{ d['StartDate'] }}</td>
+                <td>{{ d['EndDate'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+

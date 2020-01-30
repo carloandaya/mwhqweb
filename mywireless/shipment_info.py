@@ -2,6 +2,8 @@ from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for, session)
 from mywireless.mw import po_login_required
 from werkzeug.exceptions import abort
+from flask_wtf import FlaskForm
+from wtforms import TextAreaField
 
 from mywireless.db import get_db_raw
 
@@ -155,3 +157,25 @@ def update_by_imei(id):
             return redirect(url_for('shipment_info.index'))
 
     return render_template('shipment_info/update_by_imei.html', shipment=shipment)
+
+
+class CorrectionSubmission(FlaskForm):
+    items = TextAreaField('Items')
+
+
+@bp.route('/shipment_info/corrections/delivered-not-received', methods=('GET', 'POST'))
+def corrections_delivered_not_received():
+    form = CorrectionSubmission()
+
+    if form.validate_on_submit():
+        corrections = form.items.data.splitlines()
+        corrections = [i.strip() for i in corrections if i]
+        placeholders = ",".join("?" * len(corrections))
+        sql = 'UPDATE ATT_ShipmentDetailReport SET IsReceived = 1 WHERE IMEI IN ({})'.format(placeholders)
+        db = get_db_raw()
+        result = db.execute(sql, corrections)
+        db.commit()
+        flash("{} row(s) affected.".format(result.rowcount))
+        return redirect(url_for('shipment_info.delivered_not_received'))
+
+    return render_template('shipment_info/correction_delivered_not_received.html', form=form)

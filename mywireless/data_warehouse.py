@@ -25,6 +25,32 @@ def get_category(id):
     return category
 
 
+def get_location(id):
+    location = get_db().execute(
+        'SELECT s.StoreKey, s.StoreName, r.RegionKey, r.RegionName, s.DealerCode, s.RQAbbreviation, s.IsActive'
+        ' FROM DimStore s JOIN DimRegion r ON s.RegionKey = r.RegionKey'
+        ' WHERE s.StoreKey = ?',
+        (id,)
+    ).fetchone()
+
+    if location is None:
+        abort(404, "Location id {0} doesn't exist.".format(id))
+
+    return location
+
+
+def get_location_district(id):
+    location_district = get_db().execute(
+        'SELECT s.StoreName, d.DistrictName, a.StartDate, a.EndDate'
+        ' FROM DimStoreAssignment a JOIN DimStore s ON a.StoreKey = s.StoreKey' 
+        ' JOIN DimDistrict d ON a.DistrictKey = d.DistrictKey'
+        ' WHERE a.StoreKey = ?'
+        ' ORDER BY a.StartDate DESC', id
+    )
+
+    return location_district
+
+
 def get_manufacturer(id):
     manufacturer = get_db().execute(
         'SELECT ManufacturerKey, ManufacturerName'
@@ -136,6 +162,13 @@ def locations_index():
     return render_template('data_warehouse/locations/index.html', locations=locations)
 
 
+@bp.route('/locations/<int:id>')
+def locations_detail(id):
+    location = get_location(id)
+    district = get_location_district(id)
+    return render_template('data_warehouse/locations/detail.html', location=location, district=district)
+
+
 @bp.route('/locations/create', methods=('GET', 'POST'))
 def locations_create():
     db = get_db()
@@ -157,26 +190,48 @@ def locations_create():
         db.commit()
         return redirect(url_for('data_warehouse.locations_index'))
 
-    return render_template('data_warehouse/locations/create.html', form=form)
+    return render_template('data_warehouse/locations/create_update.html', form=form)
 
 
 @bp.route('/locations/<int:id>/update', methods=('GET', 'POST'))
 def locations_update(id):
-    form = LocationForm()
     db = get_db()
+    regions = db.execute(
+        'SELECT RegionKey, RegionName'
+        ' FROM DimRegion'
+    ).fetchall()
+    regions_select = [(r.RegionKey, r.RegionName) for r in regions]
+    form = LocationForm()
+    form.region.choices = regions_select
+
+    if form.validate_on_submit():
+        try:
+            db.execute(
+                'UPDATE DimStore'
+                ' SET StoreName = ?, RegionKey = ?, DealerCode = ?, RQAbbreviation = ?'
+                ' WHERE StoreKey = ? ',
+                (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data, id)
+            )
+            db.commit()
+            return redirect(url_for('data_warehouse.locations_index'))
+        except IntegrityError:
+            error = 'Store Name {} already exists.'.format(form.name.data)
+            flash(error)
+            return render_template('data_warehouse/locations/update.html', form=form)
+
     location = db.execute(
-        'SELECT s.StoreKey, s.StoreName, r.RegionName, s.DealerCode, s.RQAbbreviation, s.IsActive'
-        ' FROM DimStore s JOIN DimRegion r'
-        ' ON s.RegionKey = r.RegionKey'
-        ' WHERE s.StoreKey = ?', id
+        'SELECT StoreKey, StoreName, RegionKey, DealerCode, RQAbbreviation, IsActive'
+        ' FROM DimStore'        
+        ' WHERE StoreKey = ?', id
     ).fetchone()
 
     form.name.data = location.StoreName
+    form.region.data = location.RegionKey
     form.dealer_code.data = location.DealerCode
     form.rq_abbreviation.data = location.RQAbbreviation
     form.is_active.data = location.IsActive
 
-    return render_template('data_warehouse/locations/update.html', form=form)
+    return render_template('data_warehouse/locations/create_update.html', form=form)
 
 
 @bp.route('/manufacturers')
