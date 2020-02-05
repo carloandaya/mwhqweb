@@ -5,6 +5,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, RadioField, BooleanField, HiddenField, SelectField
 from wtforms.validators import DataRequired, Length
 from mywireless import cache
+from mywireless.mw import po_login_required
+
 import time
 
 from mywireless.db import get_db
@@ -93,9 +95,30 @@ def get_products():
     return products
 
 
+@cache.cached(timeout=300, key_prefix='products_no_manufacturer')
+def get_products_no_manufacturer():
+    products = get_db().execute(
+        'SELECT p.ProductKey, m.ManufacturerName, c.CategoryName, p.ProductName, s.SubcategoryName'
+        ' FROM DimProduct p '
+        ' LEFT JOIN DimManufacturer m on p.ManufacturerKey = m.ManufacturerKey'
+        ' LEFT JOIN DimCategory c on p.CategoryKey = c.CategoryKey'
+        ' LEFT JOIN DimSubcategory s on p.SubcategoryKey = s.SubcategoryKey'
+        ' WHERE p.ManufacturerKey = -1'
+    ).fetchall()
+
+    return products
+
+
 @bp.route('/')
 def index():
-    return render_template('data_warehouse/index.html')
+    db = get_db()
+    product_no_manufacturer = db.execute(
+        'SELECT ProductKey'
+        ' FROM DimProduct'
+        ' WHERE ManufacturerKey = -1'
+    ).fetchone()
+    no_manufacturer = product_no_manufacturer
+    return render_template('data_warehouse/index.html', no_manufacturer=no_manufacturer)
 
 
 @bp.route('/categories')
@@ -269,6 +292,12 @@ class ProductForm(FlaskForm):
     subcategory_key = SelectField('Subcategory', coerce=int)
 
 
+@bp.route('/maintenance/products-no-manufacturer')
+@po_login_required
+def products_no_manufacturer_index():
+    products = get_products_no_manufacturer()
+    return render_template('data_warehouse/products/index.html', products=products)
+
 @bp.route('/products')
 def products_index():
     products = get_products()
@@ -333,7 +362,7 @@ def products_update(id):
             error = 'Updated product {}: {}.'.format(id, form.product_name.data)
             flash(error)
             cache.clear()
-            return redirect(url_for('data_warehouse.products_index'))
+            return redirect(url_for('data_warehouse.index'))
         except IntegrityError:
             error = 'Store Name {} already exists.'.format(form.name.data)
             flash(error)

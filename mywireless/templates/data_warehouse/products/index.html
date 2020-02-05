@@ -23,7 +23,9 @@
                     {{ product['ProductKey'] }}
                 </td>
                 <td>
-                    <a class="action" href="{{ url_for('data_warehouse.products_update', id=product['ProductKey']) }}">
+                    <a class="action"
+                       href="{{ url_for('data_warehouse.products_update', id=product['ProductKey']) }}"
+                       target="_blank">
                     {{ product['ProductName'] }}</a>
                 </td>
                 <td>
