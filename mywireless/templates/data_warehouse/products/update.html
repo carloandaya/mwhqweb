@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Products{% endblock %}</h1>
+    <p><a href="{{ url_for('data_warehouse.products_index') }}">Products</a></p>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.manufacturer_key.label }} {{ form.manufacturer_key }}
+        {% for error in form.manufacturer_key.errors %}
+        [{{ error }}]
+        {% endfor %}
+        {{ form.category_key.label }} {{ form.category_key }}
+        {% for error in form.category_key.errors %}
+        [{{ error }}]
+        {% endfor %}
+        {{ form.product_name.label }} {{ form.product_name }}
+        {% for error in form.product_name.errors %}
+        [{{ error }}]
+        {% endfor %}
+        <input type="submit" value="Save">
+    </form>
+{% endblock %}

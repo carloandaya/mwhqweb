@@ -1,11 +1,13 @@
 import os
 from flask import Flask
+from mywireless.cache import cache
 
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
+        DEBUG=True,
         SECRET_KEY='dev',
         DW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
         RAW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessRawData;Trusted_Connection=yes',
@@ -17,7 +19,7 @@ def create_app(test_config=None):
                           'TOKEN_ENDPOINT': '/oauth2/v2.0/token',
                           'RESOURCE': 'https://graph.microsoft.com/',
                           'API_VERSION': 'v1.0',
-                          'SCOPES': ['User.Read', 'Directory.ReadWrite.All']}
+                          'SCOPES': ['User.Read', 'Directory.ReadWrite.All']},
     )
 
     if test_config is None:
@@ -32,6 +34,8 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    cache.init_app(app)
 
     from . import db
     db.init_app(app)

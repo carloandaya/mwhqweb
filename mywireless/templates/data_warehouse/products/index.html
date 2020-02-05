@@ -5,13 +5,45 @@
 {% endblock %}
 
 {% block content %}
-    <ul>
-    {% for product in products %}
-        <li>
-            <a class="action" href="{{ url_for('data_warehouse.products_update', id=product['ProductKey']) }}">
-                {{ category['CategoryName'] }}</a>
-        </li>
-    {% endfor %}
-    </ul>
+{% cache 300 %}
+    <table id="default_table">
+        <thead>
+            <tr>
+                <th>Product SKU</th>
+                <th>Product Name</th>
+                <th>Manufacturer</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr>
+                <td>
+                    {{ product['ProductKey'] }}
+                </td>
+                <td>
+                    <a class="action" href="{{ url_for('data_warehouse.products_update', id=product['ProductKey']) }}">
+                    {{ product['ProductName'] }}</a>
+                </td>
+                <td>
+                    {{ product['ManufacturerName'] }}
+                </td>
+                <td>
+                    {{ product['CategoryName'] }}
+                </td>
+                <td>
+                    {{ product['SubcategoryName'] }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endcache %}
 {% endblock %}
 
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<script src="{{ url_for('static', filename='mywireless.js') }}"></script>
+{% endblock %}

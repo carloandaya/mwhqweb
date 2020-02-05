@@ -4,7 +4,8 @@ from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from wtforms import StringField, RadioField, BooleanField, HiddenField, SelectField
 from wtforms.validators import DataRequired, Length
-
+from mywireless import cache
+import time
 
 from mywireless.db import get_db
 
@@ -63,6 +64,33 @@ def get_manufacturer(id):
         abort(404, "Manufacturer id {0} doesn't exist.".format(id))
 
     return manufacturer
+
+
+def get_product(id):
+    product = get_db().execute(
+        'SELECT ManufacturerKey, CategoryKey, ProductName, SubcategoryKey'
+        ' FROM DimProduct'
+        ' WHERE ProductKey = ?',
+        (id)
+    ).fetchone()
+
+    if product is None:
+        abort(404, "Product SKU {} doesn't exist.".format(id))
+
+    return product
+
+
+@cache.cached(timeout=300, key_prefix='all_products')
+def get_products():
+    products = get_db().execute(
+        'SELECT p.ProductKey, m.ManufacturerName, c.CategoryName, p.ProductName, s.SubcategoryName'
+        ' FROM DimProduct p '
+        ' LEFT JOIN DimManufacturer m on p.ManufacturerKey = m.ManufacturerKey'
+        ' LEFT JOIN DimCategory c on p.CategoryKey = c.CategoryKey'
+        ' LEFT JOIN DimSubcategory s on p.SubcategoryKey = s.SubcategoryKey'
+    ).fetchall()
+
+    return products
 
 
 @bp.route('/')
@@ -232,6 +260,59 @@ def locations_update(id):
     form.is_active.data = location.IsActive
 
     return render_template('data_warehouse/locations/create_update.html', form=form)
+
+
+class ProductForm(FlaskForm):
+    manufacturer_key = SelectField('Manufacturer Key', coerce=int)
+    category_key = SelectField('Category', coerce=int)
+    product_name = StringField('Product Name')
+
+
+@bp.route('/products')
+def products_index():
+    products = get_products()
+    return render_template('data_warehouse/products/index.html', products=products)
+
+
+@bp.route('/products/<id>/update', methods=('GET', 'POST'))
+def products_update(id):
+    product = get_product(id)
+    db = get_db()
+    manufacturers = db.execute(
+        'SELECT ManufacturerKey, ManufacturerName'
+        ' FROM DimManufacturer'
+    ).fetchall()
+    categories = db.execute(
+        'SELECT CategoryKey, CategoryName'
+        ' FROM DimCategory'
+    ).fetchall()
+    manufacturers_select = [(m.ManufacturerKey, m.ManufacturerName) for m in manufacturers]
+    categories_select = [(c.CategoryKey, c.CategoryName) for c in categories]
+    form = ProductForm()
+    form.manufacturer_key.choices = manufacturers_select
+    form.category_key.choices = categories_select
+
+    if form.validate_on_submit():
+        try:
+            db.execute(
+                'UPDATE DimProduct'
+                ' SET ManufacturerKey = ?, CategoryKey = ?, ProductName = ?'
+                ' WHERE ProductKey = ?',
+                (form.manufacturer_key.data, form.category_key.data, form.product_name.data, id)
+            )
+            db.commit()
+            error = 'Updated product {}: {}.'.format(id, form.product_name.data)
+            flash(error)
+            return redirect(url_for('data_warehouse.products_index'))
+        except IntegrityError:
+            error = 'Store Name {} already exists.'.format(form.name.data)
+            flash(error)
+            return render_template('data_warehouse/locations/update.html', form=form)
+
+    form.manufacturer_key.data = product.ManufacturerKey
+    form.category_key.data = product.CategoryKey
+    form.product_name.data = product.ProductName
+    return render_template('data_warehouse/products/update.html', form=form)
 
 
 @bp.route('/manufacturers')
