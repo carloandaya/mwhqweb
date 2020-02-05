@@ -1,5 +1,5 @@
 from pyodbc import IntegrityError
-from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
+from flask import (Blueprint, flash, g, redirect, render_template, request, url_for, jsonify)
 from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from wtforms import StringField, RadioField, BooleanField, HiddenField, SelectField
@@ -263,15 +263,36 @@ def locations_update(id):
 
 
 class ProductForm(FlaskForm):
+    product_name = StringField('Product Name')
     manufacturer_key = SelectField('Manufacturer Key', coerce=int)
     category_key = SelectField('Category', coerce=int)
-    product_name = StringField('Product Name')
+    subcategory_key = SelectField('Subcategory', coerce=int)
 
 
 @bp.route('/products')
 def products_index():
     products = get_products()
     return render_template('data_warehouse/products/index.html', products=products)
+
+
+@bp.route('/products/subcategory/<int:category>')
+def subcategory(category):
+    db = get_db()
+    subcategories = db.execute(
+        'SELECT SubcategoryKey, SubcategoryName'
+        ' FROM DimSubcategory'
+        ' WHERE CategoryKey = ?',
+        category
+    ).fetchall()
+
+    sub_array = []
+    for s in subcategories:
+        sub_obj = dict()
+        sub_obj['id'] = s.SubcategoryKey
+        sub_obj['name'] = s.SubcategoryName
+        sub_array.append(sub_obj)
+
+    return jsonify({'subcategories': sub_array})
 
 
 @bp.route('/products/<id>/update', methods=('GET', 'POST'))
@@ -286,23 +307,32 @@ def products_update(id):
         'SELECT CategoryKey, CategoryName'
         ' FROM DimCategory'
     ).fetchall()
+    subcategories = db.execute(
+        'SELECT SubcategoryKey, SubcategoryName'
+        ' FROM DimSubcategory'
+        ' WHERE CategoryKey = ?',
+        product.CategoryKey
+    ).fetchall()
     manufacturers_select = [(m.ManufacturerKey, m.ManufacturerName) for m in manufacturers]
     categories_select = [(c.CategoryKey, c.CategoryName) for c in categories]
+    subcategories_select = [(s.SubcategoryKey, s.SubcategoryName) for s in subcategories]
     form = ProductForm()
     form.manufacturer_key.choices = manufacturers_select
     form.category_key.choices = categories_select
+    form.subcategory_key.choices = subcategories_select
 
     if form.validate_on_submit():
         try:
             db.execute(
                 'UPDATE DimProduct'
-                ' SET ManufacturerKey = ?, CategoryKey = ?, ProductName = ?'
+                ' SET ManufacturerKey = ?, CategoryKey = ?, ProductName = ?, SubcategoryKey = ?'
                 ' WHERE ProductKey = ?',
-                (form.manufacturer_key.data, form.category_key.data, form.product_name.data, id)
+                (form.manufacturer_key.data, form.category_key.data, form.product_name.data, form.subcategory_key.data, id)
             )
             db.commit()
             error = 'Updated product {}: {}.'.format(id, form.product_name.data)
             flash(error)
+            cache.clear()
             return redirect(url_for('data_warehouse.products_index'))
         except IntegrityError:
             error = 'Store Name {} already exists.'.format(form.name.data)
@@ -312,6 +342,7 @@ def products_update(id):
     form.manufacturer_key.data = product.ManufacturerKey
     form.category_key.data = product.CategoryKey
     form.product_name.data = product.ProductName
+    form.subcategory_key.data = product.SubcategoryKey if product.SubcategoryKey else None
     return render_template('data_warehouse/products/update.html', form=form)
 
 

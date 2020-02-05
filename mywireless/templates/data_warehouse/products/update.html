@@ -8,6 +8,10 @@
 {% block content %}
     <form method="post">
         {{ form.csrf_token }}
+        {{ form.product_name.label }} {{ form.product_name }}
+        {% for error in form.product_name.errors %}
+        [{{ error }}]
+        {% endfor %}
         {{ form.manufacturer_key.label }} {{ form.manufacturer_key }}
         {% for error in form.manufacturer_key.errors %}
         [{{ error }}]
@@ -16,10 +20,28 @@
         {% for error in form.category_key.errors %}
         [{{ error }}]
         {% endfor %}
-        {{ form.product_name.label }} {{ form.product_name }}
-        {% for error in form.product_name.errors %}
+        {{ form.subcategory_key.label }} {{ form.subcategory_key }}
+        {% for error in form.subcategory_key.errors %}
         [{{ error }}]
         {% endfor %}
         <input type="submit" value="Save">
     </form>
+    <script>
+        let category_select = document.getElementById('category_key');
+        let subcategory_select = document.getElementById('subcategory_key');
+
+        category_select.onchange = function() {
+            category = category_select.value;
+            fetch('/data_warehouse/products/subcategory/' + category).then(function(response) {
+                response.json().then(function(data) {
+                    let optionHTML = '';
+                    for (let s of data.subcategories) {
+                        optionHTML += '<option value="' + s.id + '">' + s.name + '</option>';
+                    }
+                    subcategory_select.innerHTML = optionHTML;
+                });
+            });
+
+        }
+    </script>
 {% endblock %}
