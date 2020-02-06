@@ -298,6 +298,7 @@ def products_no_manufacturer_index():
     products = get_products_no_manufacturer()
     return render_template('data_warehouse/products/index.html', products=products)
 
+
 @bp.route('/products')
 def products_index():
     products = get_products()
@@ -328,6 +329,8 @@ def subcategory(category):
 def products_update(id):
     product = get_product(id)
     db = get_db()
+    form = ProductForm()
+
     manufacturers = db.execute(
         'SELECT ManufacturerKey, ManufacturerName'
         ' FROM DimManufacturer'
@@ -336,19 +339,32 @@ def products_update(id):
         'SELECT CategoryKey, CategoryName'
         ' FROM DimCategory'
     ).fetchall()
-    subcategories = db.execute(
-        'SELECT SubcategoryKey, SubcategoryName'
-        ' FROM DimSubcategory'
-        ' WHERE CategoryKey = ?',
-        product.CategoryKey
-    ).fetchall()
+
+    if request.method == 'POST':
+        subcategories = db.execute(
+            'SELECT SubcategoryKey, SubcategoryName'
+            ' FROM DimSubcategory'
+            ' WHERE CategoryKey = ?',
+            form.category_key.data
+        ).fetchall()
+    else:
+        subcategories = db.execute(
+            'SELECT SubcategoryKey, SubcategoryName'
+            ' FROM DimSubcategory'
+            ' WHERE CategoryKey = ?',
+            product.CategoryKey
+        ).fetchall()
+
     manufacturers_select = [(m.ManufacturerKey, m.ManufacturerName) for m in manufacturers]
     categories_select = [(c.CategoryKey, c.CategoryName) for c in categories]
     subcategories_select = [(s.SubcategoryKey, s.SubcategoryName) for s in subcategories]
-    form = ProductForm()
+
     form.manufacturer_key.choices = manufacturers_select
     form.category_key.choices = categories_select
     form.subcategory_key.choices = subcategories_select
+
+    print(subcategories_select)
+    print(form.subcategory_key.data)
 
     if form.validate_on_submit():
         try:
