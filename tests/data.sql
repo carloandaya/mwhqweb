@@ -3,6 +3,15 @@ VALUES
 ('Accessory'),
 ('Phone');
 
+INSERT INTO DimSubcategory(SubcategoryName, CategoryKey)
+VALUES
+('Postpaid', 1),
+('Prepaid', 1),
+('Case', 2),
+('Screen Protector', 2),
+('Power', 2),
+('Cable', 2);
+
 INSERT INTO DimManufacturer(ManufacturerName)
 VALUES
 ('Apple'),

@@ -14,6 +14,14 @@
         {% for error in form.name.errors %}
         [{{ error }}]
         {% endfor %}
+        {{ form.first_name.label }} {{ form.first_name(size=50) }}
+        {% for error in form.first_name.errors %}
+        [{{ error }}]
+        {% endfor %}
+        {{ form.last_name.label }} {{ form.last_name(size=50) }}
+        {% for error in form.last_name.errors %}
+        [{{ error }}]
+        {% endfor %}
         {{ form.att_uid.label }} {{ form.att_uid(max=8) }}
         {% for error in form.att_uid.errors %}
         [{{ error }}]

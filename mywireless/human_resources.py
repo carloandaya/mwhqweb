@@ -15,10 +15,14 @@ class EmployeeCreateForm(FlaskForm):
                                                    Length(min=2,
                                                           max=2,
                                                           message='Field must be exactly 2 characters long.')])
+    first_name = StringField('Given Name', validators=[DataRequired()])
+    last_name = StringField('Surname', validators=[DataRequired()])
 
 
 class EmployeeUpdateForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
     att_uid = StringField('ATTUID')
 
 
@@ -27,7 +31,7 @@ bp = Blueprint('human_resources', __name__, url_prefix='/human_resources')
 
 def get_employee(id):
     employee = get_db().execute(
-        'SELECT EmployeeKey, EmployeeName, ATTUID, Email'
+        'SELECT EmployeeKey, EmployeeName, FirstName, LastName, ATTUID, Email'
         ' FROM DimEmployee'
         ' WHERE EmployeeKey = ?',
         (id,)
@@ -68,10 +72,10 @@ def employees_create():
     form = EmployeeCreateForm()
     if form.validate_on_submit():
         new_employee = db.execute(
-            'INSERT INTO DimEmployee (EmployeeName)'
+            'INSERT INTO DimEmployee (EmployeeName, FirstName, LastName)'
             ' OUTPUT INSERTED.EmployeeKey, INSERTED.EmployeeName'
-            ' VALUES (?)',
-            form.name.data
+            ' VALUES (?, ?, ?)',
+            (form.name.data, form.first_name.data, form.last_name.data)
         ).fetchone()
         db.commit()
         employee = {'EmployeeKey': new_employee[0], 'EmployeeName': new_employee[1]}
@@ -92,38 +96,29 @@ def employees_create():
 @bp.route('/employees/<int:id>/update', methods=('GET', 'POST'))
 @hr_login_required
 def employees_update(id):
-    employee = get_employee(id)
     form = EmployeeUpdateForm()
-    form.name.data = employee[1]
-    form.att_uid.data = employee[2]
 
     if form.validate_on_submit():
-        employee_name = request.form['name']
-        employee_attuid = request.form['att_uid']
-        print(employee_name)
-        print(employee_attuid)
-        error = None
-
-        if not employee_name:
-            error = 'Employee Name is required.'
-
-        if error is not None:
+        try:
+            db = get_db()
+            db.execute(
+                'UPDATE DimEmployee'
+                ' SET EmployeeName = ?, FirstName = ?, LastName = ?, ATTUID = ?'
+                ' WHERE EmployeeKey = ?',
+                (form.name.data, form.first_name.data, form.last_name.data, form.att_uid.data, id)
+            )
+            db.commit()
+            return redirect(url_for('human_resources.employees_index'))
+        except IntegrityError:
+            error = 'ATTUID {} already exists.'.format(form.att_uid.data)
             flash(error)
-        else:
-            try:
-                db = get_db()
-                db.execute(
-                    'UPDATE DimEmployee'
-                    ' SET EmployeeName = ?, ATTUID = ?'
-                    ' WHERE EmployeeKey = ?',
-                    (employee_name, employee_attuid, id)
-                )
-                db.commit()
-                return redirect(url_for('human_resources.employees_index'))
-            except IntegrityError:
-                error = 'ATTUID {} already exists.'.format(employee_attuid)
-                flash(error)
-                return render_template('human_resources/employees/update.html', form=form)
+            return render_template('human_resources/employees/update.html', form=form)
+
+    employee = get_employee(id)
+    form.name.data = employee.EmployeeName
+    form.first_name.data = employee.FirstName
+    form.last_name.data = employee.LastName
+    form.att_uid.data = employee.ATTUID
 
     return render_template('human_resources/employees/update.html', form=form)
 
