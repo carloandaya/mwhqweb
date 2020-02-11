@@ -363,9 +363,6 @@ def products_update(id):
     form.category_key.choices = categories_select
     form.subcategory_key.choices = subcategories_select
 
-    print(subcategories_select)
-    print(form.subcategory_key.data)
-
     if form.validate_on_submit():
         try:
             db.execute(

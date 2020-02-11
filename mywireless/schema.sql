@@ -56,6 +56,33 @@ CREATE UNIQUE NONCLUSTERED INDEX [IX_DimCategory_CategoryName] ON [dbo].[DimCate
 	[CategoryName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY];
 
+
+DROP TABLE IF EXISTS DimStoreAssignment;
+
+CREATE TABLE [dbo].[DimStoreAssignment](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[StoreKey] [int] NOT NULL,
+	[DistrictKey] [int] NOT NULL,
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NULL,
+PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY];
+
+DROP TABLE IF EXISTS DimDistrict;
+
+CREATE TABLE [dbo].[DimDistrict](
+	[DistrictKey] [int] IDENTITY(1,1) NOT NULL,
+	[DistrictName] [nvarchar](50) NOT NULL,
+	[RegionKey] [int] NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[DistrictKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY];
+
 --Subcategory
 
 ALTER TABLE [dbo].[DimSubcategory]  WITH CHECK ADD  CONSTRAINT [FK_DimSubcategory_DimCategory] FOREIGN KEY([CategoryKey])
@@ -132,3 +159,22 @@ ALTER TABLE [dbo].[DimProduct]  WITH CHECK ADD  CONSTRAINT [FK_DimProduct_DimSub
 REFERENCES [dbo].[DimSubcategory] ([SubcategoryKey]);
 
 ALTER TABLE [dbo].[DimProduct] CHECK CONSTRAINT [FK_DimProduct_DimSubcategory];
+
+--DimStoreAssignment
+
+ALTER TABLE [dbo].[DimStoreAssignment]  WITH CHECK ADD  CONSTRAINT [FK_DimStoreAssignment_DimDistrict] FOREIGN KEY([DistrictKey])
+REFERENCES [dbo].[DimDistrict] ([DistrictKey]);
+
+ALTER TABLE [dbo].[DimStoreAssignment] CHECK CONSTRAINT [FK_DimStoreAssignment_DimDistrict];
+
+ALTER TABLE [dbo].[DimStoreAssignment]  WITH CHECK ADD  CONSTRAINT [FK_DimStoreAssignment_DimStore] FOREIGN KEY([StoreKey])
+REFERENCES [dbo].[DimStore] ([StoreKey]);
+
+ALTER TABLE [dbo].[DimStoreAssignment] CHECK CONSTRAINT [FK_DimStoreAssignment_DimStore];
+
+--DimDistrict
+
+ALTER TABLE [dbo].[DimDistrict]  WITH CHECK ADD  CONSTRAINT [FK_DimDistrict_DimRegion] FOREIGN KEY([RegionKey])
+REFERENCES [dbo].[DimRegion] ([RegionKey]);
+
+ALTER TABLE [dbo].[DimDistrict] CHECK CONSTRAINT [FK_DimDistrict_DimRegion];

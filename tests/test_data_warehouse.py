@@ -63,11 +63,16 @@ def test_categories_update_existing(client):
     assert b'Category Name Phone already exists.' in response.data
 
 
-def test_locations_index(client, app):
+def test_locations_index(client):
     response = client.get('/data_warehouse/locations')
     assert b'Locations' in response.data
     assert b'Azusa' in response.data
     assert b'CAGLA Market' in response.data
+
+
+def test_locations_detail(client):
+    response = client.get('data_warehouse/locations/1')
+    assert b'Azusa' in response.data
 
 
 def test_locations_create(client, app):
@@ -81,6 +86,16 @@ def test_locations_create(client, app):
         assert count == 2
 
 
+def test_locations_update(client, app):
+    assert client.get('/data_warehouse/locations/1/update').status_code == 200
+    client.post('/data_warehouse/locations/1/update', data={'name': 'AT&T - Fremont', 'region': 2})
+
+    with app.app_context():
+        db = get_db()
+        store = db.execute('SELECT StoreName FROM DimStore WHERE StoreKey = 1').fetchone()
+        assert store.StoreName == 'AT&T - Fremont'
+
+
 def test_manufacturers_index(client, app):
     response = client.get('/data_warehouse/manufacturers')
     assert b'Apple' in response.data
@@ -91,7 +106,32 @@ def test_manufacturers_index(client, app):
     with app.app_context():
         db = get_db()
         count = db.execute('SELECT COUNT(ManufacturerKey) FROM DimManufacturer').fetchone()[0]
-        assert count == 3
+        assert count == 4
+
+
+def test_products_index(client):
+    response = client.get('/data_warehouse/products')
+    assert b'Apple iPhone 11 Pro Max 512GB Midnight Green' in response.data
+    assert b'Apple iPhone 7 32GB Black' in response.data
+    assert b'Apple iPhone 7 32GB Silver' in response.data
+
+
+def test_products_update(client, app):
+    assert client.get('/data_warehouse/products/AEDEPB000159/update').status_code == 200
+    client.post('/data_warehouse/products/AEDEPB000159/update', data={'product_name': 'Product Update',
+                                                                      'manufacturer_key': 1,
+                                                                      'category_key': 2,
+                                                                      'subcategory_key': 1})
+
+    with app.app_context():
+        db = get_db()
+        product = db.execute('SELECT ProductName FROM DimProduct WHERE ProductKey = ?', 'AEDEPB000159').fetchone()
+        assert product.ProductName == 'Product Update'
+
+
+def test_products_no_manufacturer(client):
+    response = client.get('/data_warehouse/maintenance/products-no-manufacturer')
+    assert b'Apple iPhone 7 32GB Silver' in response.data
 
 
 def test_manufacturers_create(client, app):
@@ -101,7 +141,7 @@ def test_manufacturers_create(client, app):
     with app.app_context():
         db = get_db()
         count = db.execute('SELECT COUNT(ManufacturerKey) FROM DimManufacturer').fetchone()[0]
-        assert count == 4
+        assert count == 5
 
 
 def test_manufacturers_create_empty(client):
