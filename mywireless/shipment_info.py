@@ -163,7 +163,7 @@ class CorrectionSubmission(FlaskForm):
     items = TextAreaField('Items')
 
 
-@bp.route('/shipment-info/corrections/delivered-not-received', methods=('GET', 'POST'))
+@bp.route('/shipment-info/adjustments/delivered-not-received', methods=('GET', 'POST'))
 @po_login_required
 def corrections_delivered_not_received():
     form = CorrectionSubmission()
