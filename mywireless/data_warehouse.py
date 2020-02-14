@@ -231,8 +231,15 @@ def locations_create():
         ' FROM DimRegion'
     ).fetchall()
     regions_select = [(r.RegionKey, r.RegionName) for r in regions]
+    districts = db.execute(
+        'SELECT DistrictKey, DistrictName'
+        ' FROM DimDistrict'
+        ' WHERE RegionKey = 1'
+    ).fetchall()
+    districts_select = [(d.DistrictKey, d.DistrictName) for d in districts]
     form = LocationForm()
     form.region.choices = regions_select
+    form.district.choices = districts_select
     form.is_active.data = True
 
     if form.validate_on_submit():
@@ -308,15 +315,13 @@ def locations_update(id):
                 'UPDATE DimStore'
                 ' SET StoreName = ?, RegionKey = ?, DealerCode = ?, RQAbbreviation = ?, IsActive = ?'
                 ' WHERE StoreKey = ? ',
-                (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data,
+                (form.name.data, form.region.data, form.dealer_code.data.lower(), form.rq_abbreviation.data.upper(),
                  form.is_active.data, id)
             )
             db.commit()
 
             if (location_district is None or form.district.data != location_district.DistrictKey) \
                     and form.district_startdate.data:
-                print(form.district_startdate.data)
-                print(type(form.district_startdate.data))
                 db.execute(
                     'INSERT INTO DimStoreAssignment (StoreKey, DistrictKey, StartDate)'
                     ' VALUES (?, ?, ?)',
