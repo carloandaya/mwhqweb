@@ -246,7 +246,7 @@ def locations_create():
         db.execute(
             'INSERT INTO DimStore (StoreName, RegionKey, DealerCode, RQAbbreviation, IsActive)'
             ' VALUES(?, ?, ?, ?, ?)',
-            (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data, form.is_active.data)
+            (form.name.data, form.region.data, form.dealer_code.data.lower(), form.rq_abbreviation.data.upper(), form.is_active.data)
         )
         db.commit()
         return redirect(url_for('data_warehouse.locations_index'))
