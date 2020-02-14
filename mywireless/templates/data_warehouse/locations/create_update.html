@@ -16,6 +16,14 @@
         {% for error in form.region.errors %}
         [{{ error }}]
         {% endfor %}
+        {{ form.district.label }} {{ form.district}}
+        {% for error in form.district.errors %}
+        [{{ error }}]
+        {% endfor %}
+        {{ form.district_startdate.label }} {{ form.district_startdate}}
+        {% for error in form.district_startdate.errors %}
+        [{{ error }}]
+        {% endfor %}
         {{ form.dealer_code.label }} {{ form.dealer_code(max=5) }}
         {% for error in form.dealer_code.errors %}
         [{{ error }}]
@@ -30,4 +38,22 @@
         {% endfor %}
         <input type="submit" value="Save">
     </form>
+    <script>
+        let region_select = document.getElementById('region');
+        let district_select = document.getElementById('district');
+
+        region.onchange = function() {
+            region = region_select.value;
+            fetch('/data_warehouse/locations/districts/' + region).then(function(response) {
+                response.json().then(function(data) {
+                    let optionHTML = '';
+                    for (let d of data.districts) {
+                        optionHTML += '<option value="' + d.id + '">' + d.name + '</option>';
+                    }
+                    district_select.innerHTML = optionHTML;
+                });
+            });
+
+        }
+    </script>
 {% endblock %}

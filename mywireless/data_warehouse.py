@@ -2,11 +2,11 @@ from pyodbc import IntegrityError
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for, jsonify)
 from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
-from wtforms import StringField, RadioField, BooleanField, HiddenField, SelectField
+from wtforms import StringField, BooleanField, SelectField, DateField
 from wtforms.validators import DataRequired, Length
 from mywireless import cache
 from mywireless.mw import po_login_required
-
+import datetime
 import time
 
 from mywireless.db import get_db
@@ -30,8 +30,9 @@ def get_category(id):
 
 def get_location(id):
     location = get_db().execute(
-        'SELECT s.StoreKey, s.StoreName, r.RegionKey, r.RegionName, s.DealerCode, s.RQAbbreviation, s.IsActive'
+        'SELECT s.StoreKey, s.StoreName, s.RegionKey, s.DealerCode, s.RQAbbreviation, s.IsActive, a.DistrictKey'        
         ' FROM DimStore s JOIN DimRegion r ON s.RegionKey = r.RegionKey'
+        ' LEFT JOIN DimStoreAssignment a on s.StoreKey = a.StoreKey AND a.EndDate IS NULL'        
         ' WHERE s.StoreKey = ?',
         (id,)
     ).fetchone()
@@ -198,6 +199,8 @@ class LocationForm(FlaskForm):
     rq_abbreviation = StringField('RQ Abbreviation')
     is_active = BooleanField('Is Active')
     region = SelectField('Region', coerce=int)
+    district = SelectField('District', coerce=int)
+    district_startdate = DateField('District Start Date', render_kw={'placeholder': 'YYYY-MM-DD'})
 
 
 @bp.route('/locations')
@@ -244,36 +247,93 @@ def locations_create():
     return render_template('data_warehouse/locations/create_update.html', form=form)
 
 
+@bp.route('/locations/districts/<int:region>')
+def district(region):
+    db = get_db()
+    districts = db.execute(
+        'SELECT DistrictKey, DistrictName'
+        ' FROM DimDistrict'
+        ' WHERE RegionKey = ?',
+        region
+    ).fetchall()
+
+    dis_array = []
+    for d in districts:
+        dis_obj = dict()
+        dis_obj['id'] = d.DistrictKey
+        dis_obj['name'] = d.DistrictName
+        dis_array.append(dis_obj)
+
+    return jsonify({'districts': dis_array})
+
+
 @bp.route('/locations/<int:id>/update', methods=('GET', 'POST'))
 def locations_update(id):
     db = get_db()
+    location = get_location(id)
+    form = LocationForm()
     regions = db.execute(
         'SELECT RegionKey, RegionName'
         ' FROM DimRegion'
     ).fetchall()
     regions_select = [(r.RegionKey, r.RegionName) for r in regions]
-    form = LocationForm()
+
+    if request.method == 'POST':
+        districts = db.execute(
+            'SELECT DistrictKey, DistrictName'
+            ' FROM DimDistrict'
+            ' WHERE RegionKey = ?',
+            form.region.data
+        ).fetchall()
+    else:
+        districts = db.execute(
+            'SELECT DistrictKey, DistrictName'
+            ' FROM DimDistrict'
+            ' WHERE RegionKey = ?',
+            location.RegionKey
+        ).fetchall()
+
+    districts_select = [(d.DistrictKey, d.DistrictName) for d in districts]
+
     form.region.choices = regions_select
+    form.district.choices = districts_select
 
     if form.validate_on_submit():
+        location_district = db.execute(
+            'SELECT DistrictKey FROM DimStoreAssignment WHERE StoreKey = ? AND EndDate IS NULL',
+            id
+        ).fetchone()
         try:
             db.execute(
                 'UPDATE DimStore'
-                ' SET StoreName = ?, RegionKey = ?, DealerCode = ?, RQAbbreviation = ?'
+                ' SET StoreName = ?, RegionKey = ?, DealerCode = ?, RQAbbreviation = ?, IsActive = ?'
                 ' WHERE StoreKey = ? ',
-                (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data, id)
+                (form.name.data, form.region.data, form.dealer_code.data, form.rq_abbreviation.data,
+                 form.is_active.data, id)
             )
             db.commit()
+
+            if (location_district is None or form.district.data != location_district.DistrictKey) \
+                    and form.district_startdate.data:
+                print(form.district_startdate.data)
+                print(type(form.district_startdate.data))
+                db.execute(
+                    'INSERT INTO DimStoreAssignment (StoreKey, DistrictKey, StartDate)'
+                    ' VALUES (?, ?, ?)',
+                    (id, form.district.data, form.district_startdate.data)
+                )
+                db.commit()
+
             return redirect(url_for('data_warehouse.locations_index'))
         except IntegrityError:
             error = 'Store Name {} already exists.'.format(form.name.data)
             flash(error)
-            return render_template('data_warehouse/locations/update.html', form=form)
+            return render_template('data_warehouse/locations/create_update.html', form=form)
 
     location = db.execute(
-        'SELECT StoreKey, StoreName, RegionKey, DealerCode, RQAbbreviation, IsActive'
-        ' FROM DimStore'        
-        ' WHERE StoreKey = ?', id
+        'SELECT s.StoreKey, s.StoreName, s.RegionKey, s.DealerCode, s.RQAbbreviation, s.IsActive, a.DistrictKey'
+        ' FROM DimStore s LEFT JOIN DimStoreAssignment a ON s.StoreKey = a.StoreKey AND a.EndDate IS NULL'            
+        ' WHERE s.StoreKey = ?', id
     ).fetchone()
 
     form.name.data = location.StoreName

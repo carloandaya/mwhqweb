@@ -9,8 +9,8 @@ def create_app(test_config=None):
     app.config.from_mapping(
         DEBUG=True,
         SECRET_KEY='dev',
-        DW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=yes',
-        RAW_DATABASE='DRIVER={SQL Server};SERVER=localhost;DATABASE=MyWirelessRawData;Trusted_Connection=yes',
+        DW_DATABASE='DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=MyWirelessDW;Trusted_Connection=Yes',
+        RAW_DATABASE='DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=MyWirelessRawData;Trusted_Connection=Yes',
         OAUTH_CREDENTIALS={'CLIENT_ID': 'client_id',
                            'CLIENT_SECRET': 'client_secret'},
         OAUTH_PARAMETERS={'REDIRECT_URI': 'http://localhost:5000/login/authorized',
