@@ -369,8 +369,10 @@ def locations_update(id):
     form.dealer_code.data = location.DealerCode
     form.rq_abbreviation.data = location.RQAbbreviation
     form.is_active.data = location.IsActive
-    form.district.data = location_district.DistrictKey
-    form.district_startdate.data = location_district.StartDate
+
+    if location_district:
+        form.district.data = location_district.DistrictKey
+        form.district_startdate.data = location_district.StartDate
 
     return render_template('data_warehouse/locations/create_update.html', form=form)
 
