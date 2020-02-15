@@ -255,12 +255,22 @@ def locations_create():
     form.is_active.data = True
 
     if form.validate_on_submit():
-        db.execute(
+        new_store = db.execute(
             'INSERT INTO DimStore (StoreName, RegionKey, DealerCode, RQAbbreviation, IsActive)'
+            ' OUTPUT INSERTED.StoreKey'
             ' VALUES(?, ?, ?, ?, ?)',
-            (form.name.data, form.region.data, form.dealer_code.data.lower(), form.rq_abbreviation.data.upper(), form.is_active.data)
+            (form.name.data, form.region.data, form.dealer_code.data.lower(),
+             form.rq_abbreviation.data.upper(), form.is_active.data)
+        ).fetchone()
+        db.commit()
+
+        db.execute(
+            'INSERT INTO DimStoreAssignment (StoreKey, DistrictKey, StartDate)'
+            ' VALUES (?, ?, ?)',
+            (new_store[0], form.district.data, form.district_startdate.data)
         )
         db.commit()
+
         return redirect(url_for('data_warehouse.locations_index'))
 
     return render_template('data_warehouse/locations/create_update.html', form=form)
@@ -314,14 +324,15 @@ def locations_update(id):
 
     districts_select = [(d.DistrictKey, d.DistrictName) for d in districts]
 
+    location_district = db.execute(
+        'SELECT DistrictKey, StartDate FROM DimStoreAssignment WHERE StoreKey = ? AND EndDate IS NULL',
+        id
+    ).fetchone()
+
     form.region.choices = regions_select
     form.district.choices = districts_select
 
     if form.validate_on_submit():
-        location_district = db.execute(
-            'SELECT DistrictKey FROM DimStoreAssignment WHERE StoreKey = ? AND EndDate IS NULL',
-            id
-        ).fetchone()
         try:
             db.execute(
                 'UPDATE DimStore'
@@ -358,6 +369,8 @@ def locations_update(id):
     form.dealer_code.data = location.DealerCode
     form.rq_abbreviation.data = location.RQAbbreviation
     form.is_active.data = location.IsActive
+    form.district.data = location_district.DistrictKey
+    form.district_startdate.data = location_district.StartDate
 
     return render_template('data_warehouse/locations/create_update.html', form=form)
 
