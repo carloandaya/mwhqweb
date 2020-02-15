@@ -226,18 +226,30 @@ def locations_detail(id):
 @bp.route('/locations/create', methods=('GET', 'POST'))
 def locations_create():
     db = get_db()
+    form = LocationForm()
+
     regions = db.execute(
         'SELECT RegionKey, RegionName'
         ' FROM DimRegion'
     ).fetchall()
     regions_select = [(r.RegionKey, r.RegionName) for r in regions]
-    districts = db.execute(
-        'SELECT DistrictKey, DistrictName'
-        ' FROM DimDistrict'
-        ' WHERE RegionKey = 1'
-    ).fetchall()
+
+    if request.method == 'POST':
+        districts = db.execute(
+            'SELECT DistrictKey, DistrictName'
+            ' FROM DimDistrict'
+            ' WHERE RegionKey = ?',
+            form.region.data
+        ).fetchall()
+    else:
+        districts = db.execute(
+            'SELECT DistrictKey, DistrictName'
+            ' FROM DimDistrict'
+            ' WHERE RegionKey = 1'
+        ).fetchall()
+
     districts_select = [(d.DistrictKey, d.DistrictName) for d in districts]
-    form = LocationForm()
+
     form.region.choices = regions_select
     form.district.choices = districts_select
     form.is_active.data = True
